@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>8樓病房預班表 - 雲端同步版</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -33,13 +34,13 @@
         select.val-員旅 { background-color: var(--travel-color); color: white; }
         select.val-上課 { background-color: var(--study-color); color: white; }
         select.val-開會 { background-color: var(--meet-color); color: white; }
-        #changeLog { max-height: 120px; overflow-y: auto; font-size: 13px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+        #changeLog { max-height: 120px; overflow-y: auto; font-size: 13px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; line-height: 1.5; }
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 999; font-weight: bold; color: #2c3e50; }
     </style>
 </head>
 <body>
 
-<div id="loadingOverlay">☁️ 雲端資料同步中，請稍候...</div>
+<div id="loadingOverlay">☁️ 雲端同步中...</div>
 
 <div class="admin-box">
     <button class="admin-toggle" onclick="toggleAdmin()">⚙️ 管理者模式</button>
@@ -59,7 +60,7 @@
             </div>
             <div style="flex: 1; border-left: 1px solid #e74c3c; padding-left: 20px;">
                 <strong>3. 管理工具：</strong><br>
-                <button onclick="randomDistributeWeekends()" style="margin-top:5px; background:#666; color:white; width:100%;">🎲 隨機平均分配假日</button>
+                <button onclick="randomDistributeWeekends()" style="margin-top:5px; background:#666; color:white; width:100%;">🎲 隨機分配假日</button>
             </div>
         </div>
     </div>
@@ -86,14 +87,13 @@
     </table>
 </div>
 
-<div style="margin-top: 15px;"><h4 style="margin:0 0 5px 0; color:#2980b9;">🔄 假日異動追蹤 (僅紀錄六日)</h4><div id="changeLog">尚未有紀錄</div></div>
+<div style="margin-top: 15px;"><h4 style="margin:0 0 5px 0; color:#2980b9;">🔄 假日異動紀錄 (雲端儲存)</h4><div id="changeLog">尚未有紀錄</div></div>
 
 <script>
-    // 已自動填入您的 GAS 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz0Yg42Tr8X2cNrMP3DXyhBUrYjE7WCI4qWqCCUqA5b5ard1LmFqRGxaQ-ThuxI65TU/exec";
-    
     const ADMIN_PW = "810713"; 
     const staffList = ["3632-林咨璇", "M820-李筱薇", "M599-賴玉玫", "M944-謝家榆", "M956-林詩涵", "M976-林芝妘", "N007-陳郁婷", "E578-王淑娟", "M798-吳依蓁", "N513-葉懿嬋", "N530-龍家文", "N639-曾意晴", "N645-賴妙貞", "N881-曾莉雯", "N994-林昱均", "M028-董祐慈", "M226-徐郁雯", "M296-吳佳玲", "M343-黃躍綺", "M510-陳建儒", "M536-張盈綺", "M637-劉佳豫", "M697-張文甄", "N054-陳思宇", "M701-蔡昀珊", "M775-劉芷凌"];
+    
     let isAdmin = false, currentStartDate, allPeriods = [], openPeriods = [], lockedDays = [], timeConfig = null;
 
     async function init() {
@@ -124,7 +124,7 @@
                     document.getElementById('openEndTime').value = timeConfig.end || '';
                 }
             }
-        } catch(e) { console.error("雲端讀取失敗"); }
+        } catch(e) {}
         showLoading(false);
     }
 
@@ -133,11 +133,7 @@
         showLoading(true);
         const grid = Array.from(document.querySelectorAll("#tableBody tr")).map(row => Array.from(row.querySelectorAll("select")).map(s => s.value));
         try {
-            const response = await fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ sheetName: "Data", key: currentStartDate.getTime(), value: JSON.stringify(grid) })
-            });
+            await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: "Data", key: currentStartDate.getTime(), value: JSON.stringify(grid) }) });
             alert("✅ 雲端儲存成功！");
         } catch(e) { alert("❌ 儲存失敗"); }
         showLoading(false);
@@ -162,10 +158,43 @@
             const lockResp = await fetch(`${GAS_URL}?sheetName=Locks&key=${currentStartDate.getTime()}`);
             const lockText = await lockResp.text();
             lockedDays = lockText ? JSON.parse(lockText) : [];
+            
+            // 加載日誌
+            const logResp = await fetch(`${GAS_URL}?sheetName=Log&key=${currentStartDate.getTime()}`);
+            const logText = await logResp.text();
+            const logDiv = document.getElementById('changeLog');
+            if (logText) {
+                const cloudLogs = JSON.parse(logText);
+                logDiv.innerHTML = cloudLogs.map(l => `<div style="border-bottom:1px solid #eee;">${l}</div>`).join('');
+            } else { logDiv.innerHTML = "尚未有紀錄"; }
+
             renderTable(false); 
-        } catch(e) { console.error("讀取失敗"); }
+        } catch(e) {}
         showLoading(false);
         refreshUI();
+    }
+
+    // --- 修改後的雲端儲存日誌功能 ---
+    async function addLog(msg) {
+        const logDiv = document.getElementById('changeLog');
+        if (logDiv.innerHTML === "尚未有紀錄") logDiv.innerHTML = "";
+        const fullMsg = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logDiv.innerHTML = `<div style="border-bottom:1px solid #eee;">${fullMsg}</div>` + logDiv.innerHTML;
+
+        if (!currentStartDate) return;
+        try {
+            const resp = await fetch(`${GAS_URL}?sheetName=Log&key=${currentStartDate.getTime()}`);
+            const text = await resp.text();
+            let logList = text ? JSON.parse(text) : [];
+            logList.unshift(fullMsg);
+            if (logList.length > 50) logList.pop();
+
+            await fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ sheetName: "Log", key: currentStartDate.getTime(), value: JSON.stringify(logList) })
+            });
+        } catch(e) { console.error("日誌儲存失敗"); }
     }
 
     function renderTable(clearData = true) {
@@ -217,11 +246,6 @@
         renderTable(false);
     }
 
-    async function saveSystemSettings() { openPeriods = Array.from(document.querySelectorAll('#checkboxContainer input:checked')).map(cb => parseInt(cb.value)); await saveGlobal(); alert("週期更新成功"); renderPeriodPicker(); }
-    async function saveTimeSettings() { timeConfig = { start: document.getElementById('openStartTime').value, end: document.getElementById('openEndTime').value }; await saveGlobal(); alert("時間更新成功"); checkAccess(); }
-    async function saveGlobal() { await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: "Config", key: "global", value: JSON.stringify({ openPeriods, timeConfig }) }) }); }
-
-    function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? "flex" : "none"; }
     function checkAccess() {
         if (isAdmin) { updateUI(true, "管理者模式"); return; }
         let isAllowed = false, text = "系統鎖定中";
@@ -235,15 +259,20 @@
     function updateUI(isAllowed, text) {
         document.querySelectorAll("#tableBody select").forEach((s, idx) => s.disabled = !isAllowed || (lockedDays.includes(idx % 28) && !isAdmin));
         const sn = document.getElementById('statusNotice'); if(sn) { sn.innerText = `(${text})`; sn.style.color = isAllowed ? "#27ae60" : "#e74c3c"; }
+        document.getElementById('modeLabel').innerText = isAllowed ? "【同仁填報中】" : "【系統鎖定中】";
     }
-    function handleCellChange(el, name, date, isW) { el.className = el.value ? `val-${el.value}` : ''; if (isW) addLog(`📝 ${name} 改 ${date}日(假日) 為: ${el.value || "上班"}`); refreshUI(); }
-    function addLog(msg) { const logDiv = document.getElementById('changeLog'); if (logDiv.innerHTML === "尚未有紀錄") logDiv.innerHTML = ""; logDiv.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>` + logDiv.innerHTML; }
+    function handleCellChange(el, name, date, isW) { el.className = el.value ? `val-${el.value}` : ''; if (isW) addLog(`${name} 改 ${date}日(假日) 為: ${el.value || "上班"}`); refreshUI(); }
     function refreshUI() { for (let i = 0; i < 28; i++) { let count = 0; document.querySelectorAll(`#tableBody tr td:nth-child(${i + 2}) select`).forEach(s => { if (s.value !== "") count++; }); if(document.getElementById(`total-${i}`)) document.getElementById(`total-${i}`).innerText = count; } }
     function toggleAdmin() { if (!isAdmin && prompt("管理者密碼：") !== ADMIN_PW) return alert("密碼錯誤"); isAdmin = !isAdmin; document.getElementById('openSettings').style.display = isAdmin ? "block" : "none"; renderPeriodPicker(); checkAccess(); }
     function changePeriod(ts) { currentStartDate = new Date(parseInt(ts)); renderTable(true); }
+    async function saveSystemSettings() { openPeriods = Array.from(document.querySelectorAll('#checkboxContainer input:checked')).map(cb => parseInt(cb.value)); await saveGlobal(); alert("已儲存"); renderPeriodPicker(); }
+    async function saveTimeSettings() { timeConfig = { start: document.getElementById('openStartTime').value, end: document.getElementById('openEndTime').value }; await saveGlobal(); alert("已儲存"); checkAccess(); }
+    async function saveGlobal() { await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: "Config", key: "global", value: JSON.stringify({ openPeriods, timeConfig }) }) }); }
     function renderAdminCheckboxes() { document.getElementById('checkboxContainer').innerHTML = allPeriods.map(p => `<div style="display:inline-block; width:180px;"><input type="checkbox" value="${p.timestamp}" ${openPeriods.includes(p.timestamp)?'checked':''}> ${p.label}</div>`).join(''); }
     function renderPeriodPicker() { const picker = document.getElementById('periodPicker'); const available = allPeriods.filter(p => isAdmin || openPeriods.includes(p.timestamp)); picker.innerHTML = available.map(p => `<option value="${p.timestamp}">${p.label}</option>`).join(''); if(available.length > 0) changePeriod(picker.value); }
+    function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? "flex" : "none"; }
     function toggleZoom() { const w = document.getElementById('zoomWrapper'); w.style.zoom = (w.style.zoom === "1") ? "0.85" : "1"; }
+    
     function swapFullWeekend() {
         const myCode = prompt("您的代號:"), targetCode = prompt("對方代號:");
         if (!myCode || !targetCode) return;
@@ -261,9 +290,10 @@
             }
         }
         refreshUI();
-        addLog(`🔁 假日互換：${staffList[mi].split('-')[1]}(${myD.join('.')}) ↔️ ${staffList[ti].split('-')[1]}(${tgD.join('.')})`);
+        addLog(`${staffList[mi].split('-')[1]}(${myD.join('.')}) ↔️ ${staffList[ti].split('-')[1]}(${tgD.join('.')})`);
         alert("互換完成！");
     }
+
     function randomDistributeWeekends() {
         if (!isAdmin) return;
         if (!confirm("確定執行隨機分配？")) return;
@@ -282,6 +312,7 @@
         refreshUI();
         addLog(`🎲 隨機分配完成 (配比: ${dist.join('-')})`); alert("分配完成！");
     }
+
     function exportToExcel() {
         const data = [["員工-姓名", ...Array.from({length:28}, (_,i)=>{ let d = new Date(currentStartDate.getTime()); d.setDate(currentStartDate.getDate()+i); return `${d.getMonth()+1}/${d.getDate()}(${["日","一","二","三","四","五","六"][d.getDay()]})`; })]];
         document.querySelectorAll("#tableBody tr").forEach(row => { data.push([row.querySelector("td").innerText, ...Array.from(row.querySelectorAll("select")).map(s => s.value)]); });
