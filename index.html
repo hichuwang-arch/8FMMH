@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
-    <title>8F預班表 - 管理強化版</title>
+    <title>8F預班表 - 管理完備版</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -13,53 +13,29 @@
             --locked-day-bg: #f9f9f9;
         }
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 10px; background-color: #f0f2f5; }
-        
         .admin-box { background: #fff; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .admin-toggle { background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .admin-tools { margin-top: 10px; padding: 12px; background: #fffcfc; border-radius: 8px; display: none; border: 1px dashed #e74c3c; font-size: 14px; }
-        
         .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .btn-group button { padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; color: white; margin-left: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .save-btn { background-color: #34495e; }
         .swap-btn { background-color: #f39c12; }
         .export-btn { background-color: #27ae60; width: 100%; margin: 5px 0 0 0 !important; }
         .random-btn { background-color: #666; width: 100%; margin: 0 !important; }
+        .clear-log-btn { background-color: #e74c3c; width: 100%; margin: 5px 0 0 0 !important; }
 
-        .table-wrapper { 
-            max-height: 65vh; 
-            overflow: auto; 
-            background: white; 
-            border: 1px solid #ddd; 
-            border-radius: 8px;
-            zoom: 0.9;
-        }
-        
+        .table-wrapper { max-height: 65vh; overflow: auto; background: white; border: 1px solid #ddd; border-radius: 8px; zoom: 0.9; }
         table { border-collapse: separate; border-spacing: 0; width: 100%; }
         th { border: 1px solid #eee; padding: 8px 4px; text-align: center; background: #fff; min-width: 45px; }
         thead th { position: sticky; top: 0; z-index: 10; background: #f8f9fa; border-bottom: 2px solid #ccc; height: 60px; }
-        
-        .sticky-col { 
-            position: sticky; 
-            left: 0; 
-            background: #fefefe !important; 
-            font-weight: bold; 
-            z-index: 11; 
-            border-right: 3px solid #666; 
-            min-width: 150px; 
-            text-align: left; 
-            padding-left: 12px;
-            box-shadow: 4px 0 6px -2px rgba(0,0,0,0.1);
-        }
-        
+        .sticky-col { position: sticky; left: 0; background: #fefefe !important; font-weight: bold; z-index: 11; border-right: 3px solid #666; min-width: 150px; text-align: left; padding-left: 12px; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.1); }
         .is-weekend { background-color: var(--weekend-bg) !important; color: #d32f2f; }
         .locked-column { background-color: var(--locked-day-bg) !important; }
-        
         td { border: 1px solid #f0f0f0; padding: 6px 2px; text-align: center; height: 40px; }
         select { width: 90%; height: 34px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; font-size: 14px; appearance: auto; text-align: center; }
         select.val-OFF { background-color: var(--off-color); color: white; }
         select.val-V { background-color: var(--v-color); color: white; }
-        
-        #changeLog { max-height: 120px; overflow-y: auto; font-size: 13px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; line-height: 1.6; }
+        #changeLog { max-height: 120px; overflow-y: auto; font-size: 13px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; line-height: 1.6; margin-top: 15px; }
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); display: none; justify-content: center; align-items: center; z-index: 999; font-weight: bold; color: #2c3e50; }
     </style>
 </head>
@@ -69,7 +45,7 @@
 
 <div class="admin-box">
     <button class="admin-toggle" onclick="toggleAdmin()">⚙️ 管理設定</button>
-    <span id="modeLabel" style="font-weight:bold; margin-left:10px; color:#e74c3c;">【系統載入中】</span>
+    <span id="modeLabel" style="font-weight:bold; margin-left:10px; color:#e74c3c;">【載入中】</span>
     <div id="openSettings" class="admin-tools">
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
             <div style="flex: 1.2; min-width: 200px;">
@@ -87,6 +63,7 @@
                 <strong>3. 管理工具：</strong><br>
                 <button class="random-btn" onclick="randomDistributeWeekends()" style="margin-top:5px; padding:8px; border-radius:6px; font-weight:bold; border:none; color:white;">🎲 隨機分配假日</button>
                 <button class="export-btn" onclick="exportToExcel()" style="padding:8px; border-radius:6px; font-weight:bold; border:none; color:white;">📥 匯出 Excel 報表</button>
+                <button class="clear-log-btn" onclick="clearCloudLog()" style="padding:8px; border-radius:6px; font-weight:bold; border:none; color:white;">🗑️ 清除互換紀錄</button>
             </div>
         </div>
     </div>
@@ -100,7 +77,7 @@
 <div class="header-area">
     <h2 style="margin:0; font-size:20px; color:#2c3e50;">🏥 8F預班表 <span id="statusNotice" style="font-size:12px; font-weight:normal;"></span></h2>
     <div class="btn-group">
-        <button class="swap-btn" onclick="swapFullWeekend()">🔁 互換</button>
+        <button class="swap-btn" onclick="swapFullWeekend()">🔁 假日互換</button>
         <button class="save-btn" onclick="saveToCloud()">💾 儲存</button>
     </div>
 </div>
@@ -109,11 +86,12 @@
     <table id="mainTable">
         <thead><tr id="dateHeader"><th class="sticky-col">員工代號-姓名</th></tr></thead>
         <tbody id="tableBody"></tbody>
-        <tfoot><tr style="background:#f1f1f1; font-weight:bold;" id="footerStats"><td class="sticky-col">當日預假總數</td></tr></tfoot>
+        <tfoot><tr style="background:#f1f1f1; font-weight:bold;" id="footerStats"><td class="sticky-col">預假總數</td></tr></tfoot>
     </table>
 </div>
 
-<div style="margin-top: 15px;"><h4 style="margin:0 0 8px 0; color:#2980b9;">🔄 假日異動紀錄 (雲端同步)</h4><div id="changeLog">尚未有紀錄</div></div>
+<h4 style="margin:15px 0 8px 0; color:#2980b9;">🔄 假日互換紀錄 (僅顯示代號交換)</h4>
+<div id="changeLog">尚未有紀錄</div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz0Yg42Tr8X2cNrMP3DXyhBUrYjE7WCI4qWqCCUqA5b5ard1LmFqRGxaQ-ThuxI65TU/exec";
@@ -198,21 +176,41 @@
         refreshUI();
     }
 
-    async function addLog(msg) {
+    async function addLog(msg, forceCloud = true) {
         const logDiv = document.getElementById('changeLog');
         if (logDiv.innerHTML === "尚未有紀錄") logDiv.innerHTML = "";
         const timeStr = new Date().toLocaleTimeString('zh-TW', {hour12:false});
         const fullMsg = `[${timeStr}] ${msg}`;
         logDiv.innerHTML = `<div style="border-bottom:1px solid #eee; padding:3px 0;">${fullMsg}</div>` + logDiv.innerHTML;
+
+        if (forceCloud && !isAdmin && currentStartDate) {
+            try {
+                const resp = await fetch(`${GAS_URL}?sheetName=Log&key=${currentStartDate.getTime()}`);
+                const text = await resp.text();
+                let logList = text ? JSON.parse(text) : [];
+                logList.unshift(fullMsg);
+                if (logList.length > 50) logList.pop();
+                await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: "Log", key: currentStartDate.getTime(), value: JSON.stringify(logList) }) });
+            } catch(e) {}
+        }
+    }
+
+    // --- 新增：清除雲端日誌功能 ---
+    async function clearCloudLog() {
         if (!currentStartDate) return;
+        if (!confirm(`確定要清除【${allPeriods.find(p => p.timestamp === currentStartDate.getTime()).label}】的所有互換紀錄嗎？此動作無法復原。`)) return;
+        
+        showLoading(true);
         try {
-            const resp = await fetch(`${GAS_URL}?sheetName=Log&key=${currentStartDate.getTime()}`);
-            const text = await resp.text();
-            let logList = text ? JSON.parse(text) : [];
-            logList.unshift(fullMsg);
-            if (logList.length > 50) logList.pop();
-            await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: "Log", key: currentStartDate.getTime(), value: JSON.stringify(logList) }) });
-        } catch(e) {}
+            await fetch(GAS_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                body: JSON.stringify({ sheetName: "Log", key: currentStartDate.getTime(), value: JSON.stringify([]) }) 
+            });
+            document.getElementById('changeLog').innerHTML = "尚未有紀錄";
+            alert("✅ 雲端紀錄已清除成功！");
+        } catch(e) { alert("❌ 清除失敗"); }
+        showLoading(false);
     }
 
     function renderTable(clearData = true) {
@@ -220,7 +218,7 @@
         const header = document.getElementById('dateHeader'), tbody = document.getElementById('tableBody'), footer = document.getElementById('footerStats');
         header.innerHTML = '<th class="sticky-col">員工代號-姓名</th>';
         if(clearData) tbody.innerHTML = '';
-        footer.innerHTML = '<td class="sticky-col">當日預假總數</td>';
+        footer.innerHTML = '<td class="sticky-col">預假總數</td>';
         for (let i = 0; i < 28; i++) {
             let curr = new Date(currentStartDate.getTime()); curr.setDate(currentStartDate.getDate() + i);
             let th = document.createElement('th');
@@ -238,9 +236,8 @@
                 for (let i = 0; i < 28; i++) {
                     let td = document.createElement('td');
                     let curr = new Date(currentStartDate.getTime()); curr.setDate(currentStartDate.getDate() + i);
-                    const isW = (curr.getDay()===0 || curr.getDay()===6);
-                    if (isW) td.className = 'is-weekend';
-                    td.innerHTML = `<select onchange="handleCellChange(this, '${staff.split('-')[1]}', ${curr.getDate()}, ${isW})">
+                    if (curr.getDay()===0 || curr.getDay()===6) td.className = 'is-weekend';
+                    td.innerHTML = `<select onchange="handleCellChange(this)">
                         <option value="">--</option><option value="OFF">OFF</option><option value="V">V</option><option value="員旅">旅</option><option value="上課">課</option><option value="開會">會</option>
                     </select>`;
                     tr.appendChild(td);
@@ -279,9 +276,9 @@
         const sn = document.getElementById('statusNotice'); if(sn) { sn.innerText = `(${text})`; sn.style.color = isAllowed ? "#27ae60" : "#e74c3c"; }
         document.getElementById('modeLabel').innerText = isAllowed ? "【同仁填報中】" : "【系統鎖定中】";
     }
-    function handleCellChange(el, name, date, isW) { el.className = el.value ? `val-${el.value}` : ''; if (isW) addLog(`${name} 改 ${date}日 為: ${el.value || "上班"}`); refreshUI(); }
+    function handleCellChange(el) { el.className = el.value ? `val-${el.value}` : ''; refreshUI(); }
     function refreshUI() { for (let i = 0; i < 28; i++) { let count = 0; document.querySelectorAll(`#tableBody tr td:nth-child(${i + 2}) select`).forEach(s => { if (s.value !== "") count++; }); if(document.getElementById(`total-${i}`)) document.getElementById(`total-${i}`).innerText = count; } }
-    function toggleAdmin() { if (!isAdmin && prompt("管理者密碼：") !== ADMIN_PW) return alert("密碼錯誤"); isAdmin = !isAdmin; document.getElementById('openSettings').style.display = isAdmin ? "block" : "none"; renderPeriodPicker(); checkAccess(); }
+    function toggleAdmin() { if (!isAdmin && prompt("管理者密碼：") !== ADMIN_PW) return alert("密碼錯誤"); isAdmin = !isAdmin; document.getElementById('openSettings').style.display = isAdmin ? "block" : "none"; renderPeriodPicker(); checkAccess(); renderTable(false); }
     function changePeriod(ts) { currentStartDate = new Date(parseInt(ts)); renderTable(true); }
     async function saveSystemSettings() { openPeriods = Array.from(document.querySelectorAll('#checkboxContainer input:checked')).map(cb => parseInt(cb.value)); await saveGlobal(); alert("已儲存"); renderPeriodPicker(); }
     async function saveTimeSettings() { timeConfig = { start: document.getElementById('openStartTime').value, end: document.getElementById('openEndTime').value }; await saveGlobal(); alert("已儲存"); checkAccess(); }
@@ -308,13 +305,13 @@
             }
         }
         refreshUI();
-        addLog(`${staffList[mi].split('-')[1]}(${myD.join('.')}) ↔️ ${staffList[ti].split('-')[1]}(${tgD.join('.')})`);
+        addLog(`🔁 假日互換：${staffList[mi].split('-')[1]}(${myD.join('.')}) ↔️ ${staffList[ti].split('-')[1]}(${tgD.join('.')})`, true);
         alert("互換完成！");
     }
 
     function randomDistributeWeekends() {
         if (!isAdmin) return;
-        if (!confirm("確定執行隨機分配？")) return;
+        if (!confirm("確定隨機分配？")) return;
         const rows = document.querySelectorAll("#tableBody tr");
         const weekends = [[5,6], [12,13], [19,20], [26,27]]; 
         rows.forEach(row => row.querySelectorAll("select").forEach(s => { if(weekends.flat().includes(Array.from(row.querySelectorAll("select")).indexOf(s))) {s.value=""; s.className="";} }));
@@ -328,14 +325,10 @@
             for (let i = 0; i < count; i++) { const selects = rows[sIndices[ptr]].querySelectorAll("select"); [sat, sun].forEach(idx => { selects[idx].value = "OFF"; selects[idx].className = "val-OFF"; }); ptr++; }
         });
         refreshUI();
-        addLog(`🎲 隨機分配完成`); alert("分配完成！");
+        addLog(`🎲 管理長執行了隨機分配 (內部操作)`, false);
+        alert("完成！");
     }
 
-    function exportToExcel() {
-        const data = [["員工-姓名", ...Array.from({length:28}, (_,i)=>{ let d = new Date(currentStartDate.getTime()); d.setDate(currentStartDate.getDate()+i); return `${d.getMonth()+1}/${d.getDate()}(${["日","一","二","三","四","五","六"][d.getDay()]})`; })]];
-        document.querySelectorAll("#tableBody tr").forEach(row => { data.push([row.querySelector("td").innerText, ...Array.from(row.querySelectorAll("select")).map(s => s.value)]); });
-        const ws = XLSX.utils.aoa_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "預排班表"); XLSX.writeFile(wb, `8F預班表_${currentStartDate.toLocaleDateString()}.xlsx`);
-    }
     window.onload = init;
 </script>
 </body>
