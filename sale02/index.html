@@ -29,12 +29,19 @@
         .log-title { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 15px; }
         .id-badge { display: inline-block; background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; padding: 2px 12px; border-radius: 15px; font-weight: bold; margin: 0 8px 5px 0; font-size: 13px; }
 
-        .btn-group { margin-top: 20px; text-align: center; display: flex; justify-content: center; gap: 15px; }
-        .btn { padding: 12px 30px; font-weight: bold; font-size: 18px; border: none; cursor: pointer; border-radius: 6px; color: white; transition: 0.3s; }
+        /* 摘要區塊樣式 */
+        .summary-container { margin-top: 15px; padding: 10px; border: 1px dashed #666; background-color: #fafafa; }
+        .summary-item { margin-bottom: 5px; font-size: 15px; }
+        .summary-label { font-weight: bold; color: #003a8c; }
+
+        .btn-group { margin-top: 20px; text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 12px 20px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; border-radius: 6px; color: white; transition: 0.3s; }
         .btn-save { background: #52c41a; }
         .btn-print { background: #1890ff; }
+        .btn-summary { background: #722ed1; } /* 紫色按鈕：僅摘要 */
         .btn-clear { background: #ff4d4f; }
 
+        /* 列印設定 */
         @media print {
             .no-print { display: none !important; }
             body { margin: 0; padding: 0; width: 100%; }
@@ -47,8 +54,32 @@
             th { background-color: #f0f0f0 !important; color: #000 !important; }
             .bed-no { background-color: #e8e8e8 !important; font-size: 14px; }
             .id-badge { background: #fff !important; color: #000 !important; border: 1px solid #000 !important; }
+            .summary-container { border: 1px solid #000; background: none; }
+            
             input[type="checkbox"] { appearance: none; -webkit-appearance: none; border: 1px solid #000; width: 14px; height: 14px; position: relative; }
             input[type="checkbox"]:checked::after { content: "V"; position: absolute; top: -5px; left: 1px; font-size: 15px; font-weight: bold; color: #000; }
+
+            /* 「僅列印摘要」模式下的特殊樣式 */
+            body.print-summary-only .header,
+            body.print-summary-only .container,
+            body.print-summary-only .log-container {
+                display: none !important;
+            }
+            body.print-summary-only .summary-container {
+                border: none;
+                margin-top: 0;
+            }
+            body.print-summary-only .log-title {
+                font-size: 22px;
+                text-decoration: underline;
+                margin-bottom: 15px;
+            }
+            body.print-summary-only .summary-item {
+                font-size: 18px; /* 摘要放大字體方便閱讀 */
+                margin-bottom: 10px;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 5px;
+            }
         }
     </style>
 </head>
@@ -89,6 +120,11 @@
     </table>
 </div>
 
+<div id="printSummary" class="summary-container">
+    <div class="log-title">今日工作摘要整理：</div>
+    <div id="summaryContent" style="font-size: 14px; color: #444;">尚未有勾選項目</div>
+</div>
+
 <div class="log-container">
     <div class="log-title">今日已存檔員工代號：</div>
     <div id="idList"><span style="color:#ccc;">讀取中...</span></div>
@@ -96,26 +132,70 @@
 
 <div class="btn-group no-print">
     <button id="saveBtn" class="btn btn-save" onclick="saveWithID()">儲存並簽署</button>
-    <button class="btn btn-print" onclick="window.print()">列印表單</button>
+    <button class="btn btn-print" onclick="window.print()">列印全表</button>
+    <button class="btn btn-summary" onclick="printOnlySummary()">僅列印摘要</button>
     <button class="btn btn-clear" onclick="clearAll()">全部清除</button>
 </div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwuarBulYwh_Xs43fKHVUbGIm67djnLgOyAkE3flvAeEaIR0GD1VeWrX3AcLboZ_RWJmA/exec";
-
     const leftBeds = ['01A','01B','01C','01D','02A','02B','03A','03B','04A','04B','05A','05B','06A','06B','07A','07B','08A','08B','09A','09B','10A','10B','11A','11B','12','13','14','15','16'];
     const rightBeds = ['17','18A','18B','18C','18D','19A','19B','19C','19D','20A','20B','20C','20D','21A','21B','21C','21D','22A','22B','22C','22D','23A','23B','23C','23D','24A','24B','24C','24D'];
+    const taskNames = ["鼻胃管護理", "鼻胃管灌食", "導尿管護理", "會陰清潔", "翻身拍背", "沐浴", "下床", "新病人"];
 
     function renderTable(beds, elementId) {
         const container = document.getElementById(elementId);
         beds.forEach((bed, index) => {
             const tr = document.createElement('tr');
             let cols = `<td class="bed-no">${bed}</td>`;
-            for(let i=0; i<8; i++) cols += `<td><input type="checkbox" id="${elementId}-check-${index}-${i}"></td>`;
+            for(let i=0; i<8; i++) {
+                cols += `<td><input type="checkbox" id="${elementId}-check-${index}-${i}" onchange="updateSummary()"></td>`;
+            }
             cols += `<td><input type="text" class="input-text" id="${elementId}-text-${index}"></td>`;
             tr.innerHTML = cols;
             container.appendChild(tr);
         });
+    }
+
+    // 更新摘要的邏輯
+    function updateSummary() {
+        const summaryContent = document.getElementById('summaryContent');
+        let report = {};
+        taskNames.forEach(name => report[name] = []);
+
+        ['left-table', 'right-table'].forEach(tableId => {
+            const beds = tableId === 'left-table' ? leftBeds : rightBeds;
+            beds.forEach((bed, bedIdx) => {
+                for (let taskIdx = 0; taskIdx < 8; taskIdx++) {
+                    const checkbox = document.getElementById(`${tableId}-check-${bedIdx}-${taskIdx}`);
+                    if (checkbox && checkbox.checked) {
+                        report[taskNames[taskIdx]].push(bed);
+                    }
+                }
+            });
+        });
+
+        let html = "";
+        let hasData = false;
+        taskNames.forEach(name => {
+            if (report[name].length > 0) {
+                html += `<div class="summary-item"><span class="summary-label">${name}</span>：${report[name].join('、')}</div>`;
+                hasData = true;
+            }
+        });
+        summaryContent.innerHTML = hasData ? html : '尚未有勾選項目';
+    }
+
+    // 僅列印摘要功能
+    function printOnlySummary() {
+        const hasData = document.querySelectorAll('input[type="checkbox"]:checked').length > 0;
+        if (!hasData) return alert("目前沒有勾選任何項目，無法列印摘要喔！");
+
+        document.body.classList.add('print-summary-only');
+        window.print();
+        setTimeout(() => {
+            document.body.classList.remove('print-summary-only');
+        }, 500);
     }
 
     document.getElementById('todayDate').valueAsDate = new Date();
@@ -167,7 +247,7 @@
                 const uniqueIds = [...new Set(result.empIds)];
                 idListDiv.innerHTML = uniqueIds.map(id => `<span class="id-badge">${id}</span>`).join('');
             } else {
-                idListDiv.innerHTML = '<span style="color:#ccc;">今日尚無簽署紀錄</span>';
+                idListDiv.innerHTML = '<span style="color:#ccc;">今日學長姐尚未簽署紀錄</span>';
             }
         } catch (e) { console.warn("無法同步雲端"); }
     }
@@ -181,20 +261,16 @@
                 else el.value = data[id];
             }
         });
+        updateSummary();
     }
 
-    // 更新後的清除功能：連同員工代號紀錄一起清除
     async function clearAll() {
         if (confirm('⚠️ 警告：這將徹底清除雲端所有勾選內容與員工簽署名單！\n確定要重置嗎？')) {
-            // 1. 介面先清空
             document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
             document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
             document.getElementById('idList').innerHTML = '<span style="color:#ccc;">已清空，同步中...</span>';
-            
-            // 2. 本地暫存清空
             localStorage.removeItem('8F_nursing_data');
-            
-            // 3. 通知 GAS 執行「大掃除」：傳送 action: "clearAll"
+            updateSummary();
             try {
                 await fetch(GAS_URL, { 
                     method: "POST", 
@@ -202,7 +278,7 @@
                     body: JSON.stringify({ action: "clearAll" }) 
                 });
                 alert("雲端資料已成功全部重置！");
-                loadFromCloud(); // 重新整理畫面狀態
+                loadFromCloud();
             } catch (e) {
                 alert("網路異常，請稍後再試。");
             }
