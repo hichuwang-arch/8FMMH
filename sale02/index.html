@@ -15,7 +15,7 @@
         .container { display: flex; gap: 5px; align-items: flex-start; justify-content: center; }
         table { border-collapse: collapse; width: 49.5%; table-layout: fixed; border: 2px solid #000; }
         
-        th, td { border: 1px solid #000; text-align: center; padding: 2px 1px; height: 26px; font-size: 14px; }
+        th, td { border: 1px solid #000; text-align: center; padding: 2px 1px; height: 28px; font-size: 14px; }
         th { background-color: #e6f7ff; color: #003a8c; font-weight: bold; line-height: 1.2; font-size: 13px; }
 
         .bed-no { width: 45px; font-weight: bold; background-color: #f5f5f5 !important; font-size: 15px; }
@@ -29,57 +29,60 @@
         .log-title { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 15px; }
         .id-badge { display: inline-block; background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; padding: 2px 12px; border-radius: 15px; font-weight: bold; margin: 0 8px 5px 0; font-size: 13px; }
 
-        /* 摘要區塊樣式 */
         .summary-container { margin-top: 15px; padding: 10px; border: 1px dashed #666; background-color: #fafafa; }
         .summary-item { margin-bottom: 5px; font-size: 15px; }
         .summary-label { font-weight: bold; color: #003a8c; }
 
         .btn-group { margin-top: 20px; text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        .btn { padding: 12px 20px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; border-radius: 6px; color: white; transition: 0.3s; }
+        .btn { padding: 12px 25px; font-weight: bold; font-size: 17px; border: none; cursor: pointer; border-radius: 6px; color: white; transition: 0.3s; }
         .btn-save { background: #52c41a; }
         .btn-print { background: #1890ff; }
-        .btn-summary { background: #722ed1; } /* 紫色按鈕：僅摘要 */
+        .btn-summary { background: #722ed1; }
         .btn-clear { background: #ff4d4f; }
 
-        /* 列印設定 */
+        /* 列印優化：放大並填滿 A4 */
         @media print {
             .no-print { display: none !important; }
             body { margin: 0; padding: 0; width: 100%; }
-            @page { size: A4; margin: 0.5cm; }
-            .header h2 { font-size: 24px; margin-bottom: 10px; color: #000; }
-            .date-input { background: none; }
-            .container { gap: 2px; width: 100%; }
-            table { width: 50% !important; border: 1.5px solid #000; }
-            th, td { font-size: 13px; height: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            th { background-color: #f0f0f0 !important; color: #000 !important; }
-            .bed-no { background-color: #e8e8e8 !important; font-size: 14px; }
-            .id-badge { background: #fff !important; color: #000 !important; border: 1px solid #000 !important; }
-            .summary-container { border: 1px solid #000; background: none; }
+            @page { size: A4; margin: 0.8cm 0.5cm; } /* 稍微增加上下邊距 */
             
-            input[type="checkbox"] { appearance: none; -webkit-appearance: none; border: 1px solid #000; width: 14px; height: 14px; position: relative; }
-            input[type="checkbox"]:checked::after { content: "V"; position: absolute; top: -5px; left: 1px; font-size: 15px; font-weight: bold; color: #000; }
+            .header h2 { font-size: 22px; margin-bottom: 8px; }
+            .info-row { font-size: 13px; margin-bottom: 5px; }
+            
+            .container { gap: 3px; }
+            table { width: 49.7% !important; border: 1.5px solid #000; }
+            
+            /* 關鍵：調整行高與字體 */
+            th, td { 
+                font-size: 12.5px; 
+                height: 22px; /* 增加行高以填滿垂直空間 */
+                padding: 1px 0;
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
+            
+            th { line-height: 1.1; }
+            .bed-no { width: 40px; font-size: 13px; background-color: #eee !important; }
+            
+            .summary-container { 
+                margin-top: 12px; 
+                padding: 8px; 
+                border: 1px solid #000; 
+                background: none; 
+            }
+            .summary-item { font-size: 14px; margin-bottom: 4px; }
+            .log-container { margin-top: 10px; }
+            .id-badge { border: 1px solid #000 !important; font-size: 11px; }
 
-            /* 「僅列印摘要」模式下的特殊樣式 */
+            input[type="checkbox"] { appearance: none; -webkit-appearance: none; border: 1px solid #000; width: 13px; height: 13px; position: relative; }
+            input[type="checkbox"]:checked::after { content: "V"; position: absolute; top: -5px; left: 0px; font-size: 14px; font-weight: bold; color: #000; }
+
+            /* 僅列印摘要模式 */
             body.print-summary-only .header,
             body.print-summary-only .container,
-            body.print-summary-only .log-container {
-                display: none !important;
-            }
-            body.print-summary-only .summary-container {
-                border: none;
-                margin-top: 0;
-            }
-            body.print-summary-only .log-title {
-                font-size: 22px;
-                text-decoration: underline;
-                margin-bottom: 15px;
-            }
-            body.print-summary-only .summary-item {
-                font-size: 18px; /* 摘要放大字體方便閱讀 */
-                margin-bottom: 10px;
-                border-bottom: 1px solid #eee;
-                padding-bottom: 5px;
-            }
+            body.print-summary-only .log-container { display: none !important; }
+            body.print-summary-only .summary-container { border: none; margin: 0; }
+            body.print-summary-only .summary-item { font-size: 18px; margin-bottom: 12px; border-bottom: 1px solid #000; padding-bottom: 8px; }
         }
     </style>
 </head>
@@ -89,7 +92,7 @@
     <h2>助理護理員每日協助工作登記表</h2>
     <div class="info-row">
         <span>日期：<input type="date" id="todayDate" class="date-input"></span>
-        <span style="font-size: 12px; color: #000; max-width: 70%; text-align: right;">
+        <span style="font-size: 12px; color: #000; line-height: 1.3; text-align: right;">
             1.大夜班協助打勾，白班請核對<br>
             2.半年內新人Foley/PP/NG Care請自行完成
         </span>
@@ -121,18 +124,18 @@
 </div>
 
 <div id="printSummary" class="summary-container">
-    <div class="log-title">今日工作摘要整理：</div>
-    <div id="summaryContent" style="font-size: 14px; color: #444;">尚未有勾選項目</div>
+    <div class="log-title">【 今日工作摘要 】</div>
+    <div id="summaryContent" style="font-size: 18px; color: #333;">尚未有勾選項目</div>
 </div>
 
 <div class="log-container">
-    <div class="log-title">今日已存檔員工代號：</div>
+    <div class="log-title">存檔簽署代號：</div>
     <div id="idList"><span style="color:#ccc;">讀取中...</span></div>
 </div>
 
 <div class="btn-group no-print">
     <button id="saveBtn" class="btn btn-save" onclick="saveWithID()">儲存並簽署</button>
-    <button class="btn btn-print" onclick="window.print()">列印全表</button>
+    <button class="btn btn-print" onclick="window.print()">列印全表(A4)</button>
     <button class="btn btn-summary" onclick="printOnlySummary()">僅列印摘要</button>
     <button class="btn btn-clear" onclick="clearAll()">全部清除</button>
 </div>
@@ -157,7 +160,6 @@
         });
     }
 
-    // 更新摘要的邏輯
     function updateSummary() {
         const summaryContent = document.getElementById('summaryContent');
         let report = {};
@@ -186,16 +188,12 @@
         summaryContent.innerHTML = hasData ? html : '尚未有勾選項目';
     }
 
-    // 僅列印摘要功能
     function printOnlySummary() {
         const hasData = document.querySelectorAll('input[type="checkbox"]:checked').length > 0;
-        if (!hasData) return alert("目前沒有勾選任何項目，無法列印摘要喔！");
-
+        if (!hasData) return alert("目前沒有勾選任何項目！");
         document.body.classList.add('print-summary-only');
         window.print();
-        setTimeout(() => {
-            document.body.classList.remove('print-summary-only');
-        }, 500);
+        setTimeout(() => document.body.classList.remove('print-summary-only'), 500);
     }
 
     document.getElementById('todayDate').valueAsDate = new Date();
@@ -247,7 +245,7 @@
                 const uniqueIds = [...new Set(result.empIds)];
                 idListDiv.innerHTML = uniqueIds.map(id => `<span class="id-badge">${id}</span>`).join('');
             } else {
-                idListDiv.innerHTML = '<span style="color:#ccc;">今日學長姐尚未簽署紀錄</span>';
+                idListDiv.innerHTML = '<span style="color:#ccc;">今日尚無簽署紀錄</span>';
             }
         } catch (e) { console.warn("無法同步雲端"); }
     }
@@ -265,23 +263,16 @@
     }
 
     async function clearAll() {
-        if (confirm('⚠️ 警告：這將徹底清除雲端所有勾選內容與員工簽署名單！\n確定要重置嗎？')) {
+        if (confirm('⚠️ 警告：這將徹底清除雲端勾選內容與簽署名單！確定嗎？')) {
             document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
             document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
-            document.getElementById('idList').innerHTML = '<span style="color:#ccc;">已清空，同步中...</span>';
             localStorage.removeItem('8F_nursing_data');
             updateSummary();
             try {
-                await fetch(GAS_URL, { 
-                    method: "POST", 
-                    mode: "no-cors", 
-                    body: JSON.stringify({ action: "clearAll" }) 
-                });
-                alert("雲端資料已成功全部重置！");
+                await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "clearAll" }) });
+                alert("雲端已重置！");
                 loadFromCloud();
-            } catch (e) {
-                alert("網路異常，請稍後再試。");
-            }
+            } catch (e) { alert("連線異常"); }
         }
     }
 </script>
