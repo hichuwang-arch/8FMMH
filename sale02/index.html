@@ -196,42 +196,45 @@
     }
 
     async function loadFromCloud() {
-        const today = fixDateDisplay(); // 強制設定日期為今天
-        const dateInput = document.getElementById('todayDate');
+    const today = fixDateDisplay(); 
+    const dateInput = document.getElementById('todayDate');
 
-        const localDataRaw = localStorage.getItem('8F_nursing_data');
-        if (localDataRaw) {
-            const localData = JSON.parse(localDataRaw);
-            // 嚴格比對日期字串
-            if (String(localData.todayDate) === String(today)) {
-                applyFormData(localData);
-            } else {
-                localStorage.removeItem('8F_nursing_data');
-            }
-        }
-
-        try {
-            const response = await fetch(GAS_URL);
-            const result = await response.json();
-            if (result.formData && String(result.formData.todayDate) === String(today)) {
-                applyFormData(result.formData);
-                localStorage.setItem('8F_nursing_data', JSON.stringify(result.formData));
-            }
-            
-            // 再次校正日期，防禦 applyFormData 意外修改
-            dateInput.value = today;
-
-            const idListDiv = document.getElementById('idList');
-            if (result.formData && String(result.formData.todayDate) === String(today) && result.empIds) {
-                idListDiv.innerHTML = [...new Set(result.empIds)].map(id => `<span class="id-badge">${id}</span>`).join('');
-            } else {
-                idListDiv.innerHTML = `<span style="color:#ccc;">今日 (${today}) 尚無紀錄</span>`;
-            }
-        } catch (e) { 
-            console.warn("無法同步雲端"); 
-            dateInput.value = today;
+    const localDataRaw = localStorage.getItem('8F_nursing_data');
+    if (localDataRaw) {
+        const localData = JSON.parse(localDataRaw);
+        if (String(localData.todayDate) === String(today)) {
+            applyFormData(localData);
+        } else {
+            localStorage.removeItem('8F_nursing_data');
         }
     }
+
+    try {
+        const response = await fetch(GAS_URL);
+        const result = await response.json();
+        
+        if (result.formData && String(result.formData.todayDate) === String(today)) {
+            applyFormData(result.formData);
+            localStorage.setItem('8F_nursing_data', JSON.stringify(result.formData));
+        }
+        
+        dateInput.value = today;
+
+        // --- 這裡就是您要更新的簽署名單顯示區塊 ---
+        const idListDiv = document.getElementById('idList');
+        if (result.formData && String(result.formData.todayDate) === String(today) && result.empIds) {
+            // 直接顯示，不使用 Set 去重
+            idListDiv.innerHTML = result.empIds.map(id => `<span class="id-badge">${id}</span>`).join('');
+        } else {
+            idListDiv.innerHTML = `<span style="color:#ccc;">今日 (${today}) 尚無紀錄</span>`;
+        }
+        // ----------------------------------------
+
+    } catch (e) { 
+        console.warn("同步失敗");
+        dateInput.value = today; 
+    }
+}
 
     async function clearAll() {
         if (confirm('⚠️ 警告：這將徹底清除今日雲端內容！確定嗎？')) {
