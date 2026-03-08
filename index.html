@@ -184,7 +184,7 @@
         const grid = Array.from(document.querySelectorAll("#tableBody tr")).map(row => Array.from(row.querySelectorAll("select")).map(s => s.value));
         try {
             await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: "Data", key: currentStartDate.getTime(), value: JSON.stringify(grid) }) });
-            alert("✅ 雲端儲存成功！");
+            alert("✅儲存成功！請確認好預假有成功再離開~沒確認就離開阿姨不負責喔!!!!!");
         } catch(e) { alert("❌ 儲存失敗"); }
         showLoading(false);
     }
@@ -436,4 +436,5 @@
     window.onload = init;
 </script>
 </body>
+
 </html>
