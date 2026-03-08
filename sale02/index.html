@@ -255,7 +255,7 @@
     }
 
     async function clearAll() {
-        if (confirm('⚠️ 警告：這將徹底清除今日內容與簽署名單！確定嗎？')) {
+        if (confirm('⚠️ 警告：這將徹底清除今日雲端內容與簽署名單！確定嗎？')) {
             document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
             document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
             localStorage.removeItem('8F_nursing_data');
