@@ -2,277 +2,54 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>8F助理護理員每日協助工作登記表</title>
+    <title>8W助理員專用</title>
     <style>
-        /* --- 基礎樣式 --- */
-        body { font-family: "Microsoft JhengHei", sans-serif; margin: 5px; background-color: #fff; color: #000; }
-        .header { text-align: center; margin-bottom: 2px; }
-        .header h2 { margin: 0; text-decoration: underline; font-size: 22px; color: #333; }
-        .info-row { display: flex; justify-content: space-between; margin: 2px 15px; font-weight: bold; font-size: 14px; align-items: flex-end; }
-        .date-input { border: none; border-bottom: 2px solid #000; font-family: inherit; font-size: 16px; width: 130px; background: #fffbe6; text-align: center; }
-        .container { display: flex; gap: 3px; align-items: flex-start; justify-content: center; width: 100%; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
+        .main-wrapper { display: flex; height: 100vh; width: 100vw; }
         
-        /* --- 表格樣式：針對 A4 單頁優化尺寸 --- */
-        table { border-collapse: collapse; width: 49.8%; table-layout: fixed; border: 2px solid #000; }
-        th, td { border: 1px solid #000; text-align: center; padding: 1px; height: 28px; font-size: 14px; }
-        th { background-color: #e6f7ff; color: #003a8c; font-weight: bold; line-height: 1.1; font-size: 13px; }
-        .bed-no { width: 45px; font-weight: bold; background-color: #f0f0f0 !important; font-size: 15px; }
-        .remark-col { width: 140px; } 
-        
-        td:has(input[type="checkbox"]:checked) { background-color: #fffbe6; }
-        input[type="checkbox"] { width: 19px; height: 19px; cursor: pointer; vertical-align: middle; }
-        .input-text { width: 96%; border: none; outline: none; font-size: 14px; background: transparent; text-align: center; }
-
-        /* --- 摘要與名單 --- */
-        .log-container { margin-top: 5px; border-top: 1px solid #000; padding-top: 5px; margin-left: 10px; }
-        .log-title { font-weight: bold; color: #333; margin-bottom: 3px; font-size: 14px; }
-        .id-badge { display: inline-block; background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; padding: 1px 8px; border-radius: 10px; font-weight: bold; margin: 0 5px 3px 0; font-size: 12px; }
-        .summary-container { margin: 5px 10px; padding: 8px; border: 1px solid #000; background-color: #fafafa; }
-        .summary-item { margin-bottom: 2px; font-size: 14px; line-height: 1.3; }
-        .summary-label { font-weight: bold; color: #003a8c; }
-
-        /* --- 按鈕樣式 --- */
-        .btn-group { margin: 15px 0; text-align: center; display: flex; justify-content: center; gap: 10px; }
-        .btn { padding: 10px 20px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; border-radius: 6px; color: white; transition: 0.3s; }
-        .btn-save { background: #52c41a; }
-        .btn-print { background: #1890ff; }
-        .btn-summary { background: #722ed1; }
-        .btn-clear { background: #ff4d4f; }
-
-        /* --- A4 單頁強制縮放列印 --- */
-        @media print {
-            @page { size: A4 portrait; margin: 0.6cm 0.4cm; }
-            .no-print { display: none !important; }
-            body { margin: 0; padding: 0; width: 100%; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            th, td { height: 23.5px; font-size: 12px; border: 0.5px solid #000; }
-            input[type="checkbox"] { appearance: none; -webkit-appearance: none; border: 1px solid #000; width: 12px; height: 12px; position: relative; }
-            input[type="checkbox"]:checked::after { content: "V"; position: absolute; top: -5px; left: 0px; font-size: 13px; font-weight: bold; }
-            body.print-summary-only .header, body.print-summary-only .container, body.print-summary-only .log-container { display: none !important; }
-            body.print-summary-only .summary-container { border: none; background: none; }
+        /* 側邊欄樣式 */
+        .sidebar { 
+            width: 220px; background: #2c3e50; color: white; 
+            display: flex; flex-direction: column; flex-shrink: 0; 
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 10;
         }
+        .sidebar-header { padding: 25px 20px; font-weight: bold; font-size: 18px; background: #1a252f; text-align: center; }
+        .nav-item { 
+            padding: 18px 20px; cursor: pointer; border-left: 5px solid transparent; 
+            transition: 0.3s; font-size: 16px;
+        }
+        .nav-item:hover { background: #34495e; }
+        .nav-item.active { background: #3498db; border-left-color: #fff; }
+
+        /* 內容區：用來裝原本的網頁 */
+        .content-frame-container { flex-grow: 1; background: #fff; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        @media print { .sidebar { display: none !important; } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h2>助理護理員每日協助工作登記表</h2>
-    <div class="info-row">
-        <span>日期：<input type="date" id="todayDate" class="date-input"></span>
-        <span style="font-size: 13px; color: #000; line-height: 1.2; text-align: right;">
-            1.大夜協助勾選，白班核對後請助理員執行<br>
-            2.新人Foley/PP/NG Care請自行完成
-        </span>
-    </div>
-</div>
+<div class="main-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-header">8F助理員專用系統</div>
+        <div class="nav-item active" onclick="switchFrame('page1.html', this)">助理員工作登記表</div>
+        <div class="nav-item" onclick="switchFrame('page2.html', this)">缺物登記紀錄表</div>
+        <div class="nav-item" onclick="switchFrame('page3.html', this)">請修登記紀錄表</div>
+     </aside>
 
-<div class="container">
-    <table id="table-1">
-        <thead>
-            <tr>
-                <th class="bed-no">床號</th>
-                <th>鼻胃管<br>護理</th><th>鼻胃管<br>灌食</th><th>導尿管<br>護理</th><th>會陰<br>清潔</th><th>ON<br>氣墊床</th>
-                <th class="remark-col">備註</th>
-            </tr>
-        </thead>
-        <tbody id="left-table"></tbody>
-    </table>
-    <table id="table-2">
-        <thead>
-            <tr>
-                <th class="bed-no">床號</th>
-                <th>鼻胃管<br>護理</th><th>鼻胃管<br>灌食</th><th>導尿管<br>護理</th><th>會陰<br>清潔</th><th>ON<br>氣墊床</th>
-                <th class="remark-col">備註</th>
-            </tr>
-        </thead>
-        <tbody id="right-table"></tbody>
-    </table>
-</div>
-
-<div id="printSummary" class="summary-container">
-    <div class="log-title">【 今日工作摘要 】</div>
-    <div id="summaryContent" style="color: #333;">尚未有勾選項目</div>
-</div>
-
-<div class="log-container">
-    <div class="log-title">存檔簽署代號：</div>
-    <div id="idList"><span style="color:#ccc;">讀取中...</span></div>
-</div>
-
-<div class="btn-group no-print">
-    <button id="saveBtn" class="btn btn-save" onclick="saveWithID()">儲存並簽署</button>
-    <button class="btn btn-print" onclick="window.print()">列印 A4</button>
-    <button class="btn btn-summary" onclick="printOnlySummary()">僅印摘要</button>
-    <button class="btn btn-clear" onclick="clearAll()">全部清除</button>
+    <main class="content-frame-container">
+        <iframe id="display_box" src="page1.html"></iframe>
+    </main>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwuarBulYwh_Xs43fKHVUbGIm67djnLgOyAkE3flvAeEaIR0GD1VeWrX3AcLboZ_RWJmA/exec";
-    
-    const leftBeds = ['01A','01B','01C','01D','02A','02B','03A','03B','04A','04B','05A','05B','06A','06B','07A','07B','08A','08B','09A','09B','10A','10B','11A','11B','12','13','14','15','16'];
-    const rightBeds = ['17','18A','18B','18C','18D','19A','19B','19C','19D','20A','20B','20C','20D','21A','21B','21C','21D','22A','22B','22C','22D','23A','23B','23C','23D','24A','24B','24C','24D'];
-    const taskNames = ["鼻胃管護理", "鼻胃管灌食", "導尿管護理", "會陰清潔", "ON氣墊床"]; 
-
-    function fixDateDisplay() {
-        const dateInput = document.getElementById('todayDate');
-        const now = new Date();
-        const offset = now.getTimezoneOffset() * 60000;
-        const localDate = new Date(now.getTime() - offset).toISOString().split('T')[0];
-        dateInput.value = localDate;
-        return localDate;
+    function switchFrame(url, el) {
+        document.getElementById('display_box').src = url;
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
     }
-
-    function renderTable(beds, elementId) {
-        const container = document.getElementById(elementId);
-        beds.forEach((bed, index) => {
-            const tr = document.createElement('tr');
-            let cols = `<td class="bed-no">${bed}</td>`;
-            for(let i=0; i<taskNames.length; i++) {
-                cols += `<td><input type="checkbox" id="${elementId}-check-${index}-${i}" onchange="updateSummary()"></td>`;
-            }
-            // 已刪除備註 placeholder
-            cols += `<td><input type="text" class="input-text" id="${elementId}-text-${index}"></td>`;
-            tr.innerHTML = cols;
-            container.appendChild(tr);
-        });
-    }
-
-    function updateSummary() {
-        const summaryContent = document.getElementById('summaryContent');
-        let report = {};
-        taskNames.forEach(name => report[name] = []);
-        ['left-table', 'right-table'].forEach(tableId => {
-            const beds = (tableId === 'left-table') ? leftBeds : rightBeds;
-            beds.forEach((bed, bedIdx) => {
-                for (let taskIdx = 0; taskIdx < taskNames.length; taskIdx++) {
-                    const checkbox = document.getElementById(`${tableId}-check-${bedIdx}-${taskIdx}`);
-                    if (checkbox && checkbox.checked) report[taskNames[taskIdx]].push(bed);
-                }
-            });
-        });
-        let html = "";
-        let hasData = false;
-        taskNames.forEach(name => {
-            if (report[name].length > 0) {
-                html += `<div class="summary-item"><span class="summary-label">${name}</span>：${report[name].join('、')}</div>`;
-                hasData = true;
-            }
-        });
-        summaryContent.innerHTML = hasData ? html : '尚未有勾選項目';
-    }
-
-    async function saveWithID() {
-        const empId = prompt("請輸入您的員工代號以完成簽署：");
-        if (!empId || empId.trim() === "") return;
-        
-        const btn = document.getElementById('saveBtn');
-        btn.innerText = "同步排隊中...";
-        btn.disabled = true;
-        
-        const formData = {};
-        document.querySelectorAll('input').forEach(input => {
-            if (input.type === 'checkbox') formData[input.id] = input.checked;
-            else formData[input.id] = input.value;
-        });
-
-        try {
-            // POST 傳送後台
-            await fetch(GAS_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                body: JSON.stringify({ empId: empId, formData: formData }) 
-            });
-
-            // 1. 先變更按鈕狀態為成功
-            btn.innerText = "儲存成功 √";
-            btn.style.background = "#237804";
-            
-            // 2. 跳出提醒視窗 (這會暫停程式執行，直到使用者按確定)
-            alert("存檔成功！請再次檢查有沒有勾選成功~再離開");
-
-            // 3. 使用者按完確定後，立刻重新抓取雲端資料確保同步
-            setTimeout(async () => { 
-                await loadFromCloud(); 
-                btn.innerText = "儲存並簽署"; 
-                btn.style.background = "#52c41a";
-                btn.disabled = false; 
-            }, 500);
-
-        } catch (e) { 
-            alert("網路連線失敗，請重試！"); 
-            btn.disabled = false; 
-            btn.innerText = "儲存並簽署";
-        }
-    }
-
-    function applyFormData(data) {
-        if (!data) return;
-        Object.keys(data).forEach(id => {
-            if (id === 'todayDate') return; 
-            const el = document.getElementById(id);
-            if (el) {
-                if (el.type === 'checkbox') el.checked = (data[id] === true);
-                else el.value = data[id] || "";
-            }
-        });
-        updateSummary();
-    }
-
-    async function loadFromCloud() {
-        const today = fixDateDisplay(); 
-        const idListDiv = document.getElementById('idList');
-
-        try {
-            const response = await fetch(GAS_URL);
-            const result = await response.json();
-            
-            // 優先讀取雲端最新資料（已合併同事紀錄）
-            if (result.formData && String(result.formData.todayDate) === String(today)) {
-                applyFormData(result.formData);
-                localStorage.setItem('8F_nursing_data', JSON.stringify(result.formData));
-            }
-            
-            // 更新簽署名單顯示
-            if (result.empIds && result.empIds.length > 0) {
-                idListDiv.innerHTML = result.empIds.map(id => `<span class="id-badge">${id}</span>`).join('');
-            } else {
-                idListDiv.innerHTML = `<span style="color:#ccc;">今日 (${today}) 尚無紀錄</span>`;
-            }
-        } catch (e) { 
-            console.warn("同步失敗，改讀取本地備份");
-            const localDataRaw = localStorage.getItem('8F_nursing_data');
-            if (localDataRaw) {
-                const localData = JSON.parse(localDataRaw);
-                if (String(localData.todayDate) === String(today)) applyFormData(localData);
-            }
-        }
-    }
-
-    function printOnlySummary() {
-        if (document.querySelectorAll('input[type="checkbox"]:checked').length === 0) return alert("沒有勾選項目！");
-        document.body.classList.add('print-summary-only');
-        window.print();
-        setTimeout(() => document.body.classList.remove('print-summary-only'), 500);
-    }
-
-    async function clearAll() {
-        if (confirm('⚠️ 警告：這將徹底清除今日雲端內容與簽署名單！確定嗎？')) {
-            document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
-            document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
-            localStorage.removeItem('8F_nursing_data');
-            updateSummary();
-            try {
-                await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "clearAll" }) });
-                alert("雲端資料已清空");
-                loadFromCloud();
-            } catch (e) { alert("連線異常"); }
-        }
-    }
-
-    // 初始化
-    renderTable(leftBeds, 'left-table');
-    renderTable(rightBeds, 'right-table');
-    fixDateDisplay();
-    window.onload = loadFromCloud;
 </script>
+
 </body>
 </html>
