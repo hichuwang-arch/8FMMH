@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>請修登記表</title>
+    <style>
+        /* (保持原本的 CSS 不變) */
+        @page { size: landscape; margin: 1cm; }
+        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f3f5; }
+        .page { background: white; width: 1100px; margin: auto; padding: 25px; border: 1px solid #ccc; position: relative; min-height: 700px; }
+        h1 { text-align: center; font-size: 28px; letter-spacing: 8px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid black; padding: 6px 2px; text-align: center; height: 45px; vertical-align: middle; }
+        th { background-color: #f2f2f2; font-size: 14px; }
+        .col-date { width: 110px; } 
+        .col-name { width: 200px; }
+        .col-order { width: 90px; }  
+        .col-status { width: 100px; } 
+        .col-stamp { width: 100px; }
+        .col-note { width: auto; }
+        .col-del { width: 40px; }
+        input[type="date"], input[type="text"] { width: 95%; border: none; outline: none; font-size: 14px; text-align: center; background: transparent; }
+        .status-select { width: 95%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 13px; }
+        .order-none { background-color: #f5f5f5; color: #999; }
+        .order-done { background-color: #fff7e6; color: #fa8c16; border-color: #ffd591; }
+        .status-pending { background-color: #fff; color: #7f8c8d; }
+        .status-applied { background-color: #fff9db; color: #f39c12; }
+        .status-repairing { background-color: #e6f7ff; color: #1890ff; }
+        .status-done { background-color: #f6ffed; color: #52c41a; }
+        .row-new { background-color: #fff9db !important; }
+        .stamp { display: inline-block; border: 2px solid #d63031; color: #d63031; font-family: "標楷體", serif; font-weight: bold; font-size: 12px; padding: 2px; border-radius: 4px; transform: rotate(-5deg); }
+        .control-panel { background: #2c3e50; color: white; padding: 12px 20px; width: 1100px; margin: 0 auto 10px auto; border-radius: 8px; display: flex; gap: 15px; align-items: center; box-sizing: border-box; }
+        #user_select { height: 38px; width: 210px; font-size: 16px; border-radius: 5px; }
+        .btn { padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; border: none; font-size: 14px; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-stamp { background: #e67e22; color: white; }
+        .btn-save { background: #f1c40f; color: #2c3e50; }
+        @media print { .control-panel, .col-del, #del_header { display: none !important; } body { background: white; padding: 0; } .page { border: none; width: 100%; padding: 0; margin: 0; } .status-select { border: none; -webkit-appearance: none; appearance: none; background: transparent !important; color: black !important; } }
+    </style>
+</head>
+<body>
+
+<div class="control-panel">
+    <div>
+        <span style="font-weight:bold;">👤 執行人：</span>
+        <select id="user_select" onchange="handleUserChange()"></select>
+    </div>
+    <div style="margin-left: auto; display: flex; gap: 8px;">
+        <button class="btn btn-add" onclick="addRow()">➕ 新增項目</button>
+        <button class="btn btn-stamp" onclick="stampAllAndSave()">🏮 存檔簽章</button>
+        <button class="btn btn-save" onclick="manualSave()">💾 儲存資料</button>
+        <button class="btn" style="background:#3498db; color:white;" onclick="window.print()">📤 列印</button>
+    </div>
+</div>
+
+<div class="page">
+    <h1>請 修 登 記 表</h1>
+    <table id="itemTable">
+        <thead>
+            <tr>
+                <th class="col-date">日期</th>
+                <th class="col-name">請修項目</th>
+                <th class="col-order">請修單</th>
+                <th class="col-status">目前狀態</th>
+                <th class="col-stamp">申請人簽章</th>
+                <th class="col-note">其他備註</th>
+                <th class="col-del" id="del_header" style="display:none;"></th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    const staffList = ["3632-林咨璇", "M820-李筱薇", "M599-賴玉玫", "M944-謝家榆", "M956-林詩涵", "M976-林芝妘", "N007-陳郁婷", "E578-王淑娟", "M798-吳依蓁", "N513-葉懿嬋", "N530-龍家文", "N639-曾意晴", "N645-賴妙貞", "N881-曾莉雯", "N994-林昱均", "M028-董祐慈", "M226-徐郁雯", "M296-吳佳玲", "M343-黃悅綺", "M510-陳建儒", "M536-張盈綺", "M637-劉佳豫", "M697-張文甄", "N054-陳思宇", "M701-蔡昀珊", "M775-劉芷凌", "M240-黃茗媐", "N047-劉芳柔", "2801-新人專用"];
+    const dbKey = "8F_REPAIR_ITEMS_V2"; 
+    
+    // 💡 請確保這是您最新的部署網址
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwDVQVKTeCKcVA4l92EP9J6ekKl_JvoTrL2j-uYzB_zcneAFgh-BAmgXHczYRTfGlFv/exec"; 
+
+    let items = [];
+
+    function initUserList() {
+        const select = document.getElementById('user_select');
+        select.innerHTML = '<option value="">-- 請選擇人員 --</option>';
+        staffList.forEach(name => select.add(new Option(name, name)));
+    }
+
+    function handleUserChange() {
+        const select = document.getElementById('user_select');
+        if (select.value === "2801-新人專用") {
+            const id = prompt("請輸入員編：");
+            if (id) {
+                const name = `2801 (${id})`;
+                if (![...select.options].some(o => o.value === name)) select.add(new Option(name, name));
+                select.value = name;
+            }
+        }
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = "";
+        const user = document.getElementById('user_select').value;
+        const isAdmin = ["N047", "M240", "E578"].some(p => user.startsWith(p));
+        document.getElementById('del_header').style.display = isAdmin ? "table-cell" : "none";
+
+        items.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            if (item.isNew) tr.className = "row-new";
+            
+            let orderClass = item.repairOrder === "已開單" ? "order-done" : "order-none";
+            let statusClass = "status-pending";
+            if(item.status === "已申請") statusClass = "status-applied";
+            if(item.status === "已請修") statusClass = "status-repairing";
+            if(item.status === "已完成") statusClass = "status-done";
+
+            tr.innerHTML = `
+                <td><input type="date" value="${item.date}" onchange="updateItem(${index}, 'date', this.value)"></td>
+                <td><input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)"></td>
+                <td>
+                    <select class="status-select ${orderClass}" onchange="updateItem(${index}, 'repairOrder', this.value)">
+                        <option value="未開單" ${item.repairOrder==='未開單'?'selected':''}>未開單</option>
+                        <option value="已開單" ${item.repairOrder==='已開單'?'selected':''}>已開單</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="status-select ${statusClass}" ${isAdmin ? '' : 'disabled'} onchange="updateItem(${index}, 'status', this.value)">
+                        <option value="待處理" ${item.status==='待處理'?'selected':''}>待處理</option>
+                        <option value="已申請" ${item.status==='已申請'?'selected':''}>已申請</option>
+                        <option value="已請修" ${item.status==='已請修'?'selected':''}>已請修</option>
+                        <option value="已完成" ${item.status==='已完成'?'selected':''}>已完成</option>
+                    </select>
+                </td>
+                <td>${item.stamp ? `<span class="stamp">${item.stamp.replace('-', '<br>')}</span>` : ''}</td>
+                <td><input type="text" style="text-align:left; padding-left:5px;" value="${item.note || ''}" onchange="updateItem(${index}, 'note', this.value)"></td>
+                <td style="display:${isAdmin ? 'table-cell' : 'none'}"><button style="color:red; background:none; border:none; cursor:pointer;" onclick="deleteRow(${index})">✖</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function addRow() { 
+        const newId = "ID-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+        items.push({ date: new Date().toISOString().split('T')[0], name: "", repairOrder: "未開單", status: "待處理", stamp: "", note: "", isNew: true, id: newId }); 
+        renderTable(); 
+    }
+    
+    async function deleteRow(index) { 
+        if(confirm("確定刪除此筆資料並同步至雲端？")) { 
+            items.splice(index, 1); 
+            saveToLocal(); 
+            renderTable(); 
+            await syncToCloud(); // 刪除後同步
+        } 
+    }
+    
+    function updateItem(index, field, value) { 
+        items[index][field] = value; 
+        if(field === 'status' || field === 'repairOrder') renderTable(); 
+    }
+
+    async function stampAllAndSave() {
+        const user = document.getElementById('user_select').value;
+        if(!user) return alert("請選擇執行人！");
+        let count = 0;
+        items.forEach(item => { 
+            if(item.name && !item.stamp) { 
+                item.stamp = user; 
+                item.isNew = false; 
+                count++;
+            } 
+        });
+        saveToLocal();
+        renderTable();
+        await syncToCloud(); 
+        alert(count > 0 ? `已完成 ${count} 項簽章並同步至雲端！` : "同步完成！");
+    }
+
+    async function manualSave() { 
+        items.forEach(item => {
+            item.isNew = false;
+            if(!item.id) item.id = "ID-" + Date.now();
+        });
+        saveToLocal(); 
+        renderTable();
+        await syncToCloud(); 
+        alert("資料已儲存並同步至雲端！"); 
+    }
+
+    function saveToLocal() { localStorage.setItem(dbKey, JSON.stringify(items)); }
+
+    // 💡 優化同步函式
+    async function syncToCloud() {
+        try {
+            // 使用 text/plain 避免 CORS 預檢請求失敗
+            await fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(items)
+            });
+            console.log("同步請求已送出");
+        } catch (e) {
+            console.error("雲端同步失敗", e);
+            alert("同步失敗，請檢查網路連線");
+        }
+    }
+
+    // 💡 優化讀取函式
+   async function loadFromCloud() {
+    try {
+        // 加上隨機參數 t= 防止瀏覽器抓舊的快取檔
+        const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
+        const cloudData = await response.json();
+        
+        // 關鍵：如果雲端有回傳資料（甚至是空陣列），就直接覆蓋掉本地的 items
+        if (Array.isArray(cloudData)) {
+            items = cloudData; 
+            saveToLocal(); // 更新本機存儲，同步後台狀態
+            console.log("已同步雲端最新的後台資料");
+        }
+    } catch (e) {
+        console.warn("無法連線雲端，改由本機快取讀取", e);
+        items = JSON.parse(localStorage.getItem(dbKey)) || [];
+    }
+    renderTable(); // 重新渲染畫面
+}
+    
+    window.onbeforeunload = function() {
+        if (items.some(item => item.isNew)) return "您有尚未存檔的內容，確定要離開嗎？";
+    };
+
+    window.onload = () => { 
+        initUserList(); 
+        loadFromCloud(); 
+    };
+</script>
+</body>
+</html>
