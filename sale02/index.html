@@ -2,37 +2,77 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>8W助理員專用</title>
+    <title>8F助理員專用系統</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
-        .main-wrapper { display: flex; height: 100vh; width: 100vw; }
+        
+        /* 💡 新增：整體容器，設定為相對定位，方便漢堡按鈕定位 */
+        .main-wrapper { display: flex; height: 100vh; width: 100vw; position: relative; }
         
         /* 側邊欄樣式 */
         .sidebar { 
             width: 220px; background: #2c3e50; color: white; 
             display: flex; flex-direction: column; flex-shrink: 0; 
             box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 10;
+            /* 💡 修改：加入過場動畫，讓收合更平滑 */
+            transition: all 0.3s ease;
+            /* 💡 修改：確保內容不會在收合時溢出 */
+            overflow-x: hidden;
         }
-        .sidebar-header { padding: 25px 20px; font-weight: bold; font-size: 18px; background: #1a252f; text-align: center; }
+
+        /* 💡 新增：側邊欄隱藏時的狀態 (CSS Class) */
+        .sidebar.collapsed {
+            width: 0;
+            /* 有些瀏覽器需要 margin 來徹底隱藏 */
+            margin-left: 0; 
+        }
+
+        .sidebar-header { padding: 25px 20px; font-weight: bold; font-size: 18px; background: #1a252f; text-align: center; white-space: nowrap; }
         .nav-item { 
             padding: 18px 20px; cursor: pointer; border-left: 5px solid transparent; 
             transition: 0.3s; font-size: 16px;
+            /* 💡 新增：防止文字在側邊欄收合時斷行 */
+            white-space: nowrap; 
         }
         .nav-item:hover { background: #34495e; }
         .nav-item.active { background: #3498db; border-left-color: #fff; }
 
         /* 內容區：用來裝原本的網頁 */
-        .content-frame-container { flex-grow: 1; background: #fff; }
+        .content-frame-container { flex-grow: 1; background: #fff; position: relative; }
         iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        @media print { .sidebar { display: none !important; } }
+        /* 💡 新增：漢堡選單開關按鈕樣式 */
+        .toggle-btn {
+            position: absolute;
+            top: 10px;
+            /* 💡 這裡決定按鈕的位置，放在側邊欄收合後還看得到的地方 */
+            left: 10px; 
+            z-index: 20; /* 確保在側邊欄之上 */
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background 0.3s;
+        }
+        .toggle-btn:hover { background: #3498db; }
+
+        /* 當側邊欄開啟時，調整選單按鈕的樣式 (可選，例如移動按鈕或改顏色) */
+        /* .sidebar:not(.collapsed) + .toggle-btn { left: 230px; } */
+
+        @media print { .sidebar, .toggle-btn { display: none !important; } }
     </style>
 </head>
 <body>
 
+<button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">☰</button>
+
 <div class="main-wrapper">
-    <aside class="sidebar">
-        <div class="sidebar-header">8F助理員專用系統</div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header" style="padding-left: 50px;">8F助理員系統</div>
         <div class="nav-item active" onclick="switchFrame('page1.html', this)">助理員工作登記表</div>
         <div class="nav-item" onclick="switchFrame('page2.html', this)">缺物登記紀錄表</div>
         <div class="nav-item" onclick="switchFrame('page3.html', this)">請修登記紀錄表</div>
@@ -44,10 +84,26 @@
 </div>
 
 <script>
+    // 原有的切換頁面函式
     function switchFrame(url, el) {
         document.getElementById('display_box').src = url;
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
+        
+        // 💡 可選優化：在手機版或螢幕較窄時，點擊項目後自動收起側邊欄
+        if (window.innerWidth < 768) {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar.classList.contains('collapsed')) {
+                toggleSidebar();
+            }
+        }
+    }
+
+    // 💡 新增：開關側邊欄函式
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        // 切換 'collapsed' 這個 CSS Class
+        sidebar.classList.toggle('collapsed');
     }
 </script>
 
