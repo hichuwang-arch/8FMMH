@@ -17,13 +17,31 @@
         .col-stamp { width: 110px; }
         .col-note { width: auto; }
         .col-del { width: 40px; }
-        input[type="date"], input[type="text"] { width: 95%; border: none; outline: none; font-size: 15px; text-align: center; background: transparent; }
-        .status-select { width: 90%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; }
+        
+        /* 統一輸入框樣式，確保文字清晰 */
+        input[type="date"], input[type="text"] { width: 95%; border: none; outline: none; font-size: 15px; text-align: center; background: transparent; color: black; opacity: 1; -webkit-text-fill-color: black; }
+        
+        /* 💡 重新定義「鎖定」樣式：背景不變，僅顯示禁止符號 */
+        .cell-locked { 
+            background-color: white !important; /* 確保背景保持白色 */
+            cursor: not-allowed; /* 滑鼠變成禁止圖示 */
+        }
+        
+        /* 💡 關鍵：禁用 input 和 select 的所有滑鼠事件 */
+        .cell-locked input, .cell-locked select { 
+            color: black !important; /* 文字保持黑色 */
+            -webkit-text-fill-color: black !important; /* 針對 Webkit 瀏覽器強制黑色 */
+            pointer-events: none; /* 禁用點擊、選擇等所有滑鼠事件 */
+            cursor: not-allowed; /* 保險起見，輸入框本身也設為禁止圖示 */
+        }
+
+        .status-select { width: 90%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; color: black; opacity: 1; }
         .status-default { background-color: #fff; color: #7f8c8d; }
         .status-applied { background-color: #fff9db; color: #f39c12; }
         .status-received { background-color: #f6ffed; color: #52c41a; }
         .status-waiting { background-color: #e6f7ff; color: #1890ff; }
         .status-oos { background-color: #fff1f0; color: #f5222d; }
+        
         .row-new { background-color: #fff9db !important; }
         .stamp { display: inline-block; border: 2px solid #d63031; color: #d63031; font-family: "標楷體", serif; font-weight: bold; font-size: 13px; padding: 2px; border-radius: 4px; transform: rotate(-5deg); }
         .control-panel { background: #2c3e50; color: white; padding: 12px 20px; width: 1050px; margin: 0 auto 10px auto; border-radius: 8px; display: flex; gap: 15px; align-items: center; box-sizing: border-box; }
@@ -70,11 +88,9 @@
 <script>
     const staffList = ["3632-林咨璇", "M820-李筱薇", "M599-賴玉玫", "M944-謝家榆", "M956-林詩涵", "M976-林芝妘", "N007-陳郁婷", "E578-王淑娟", "M798-吳依蓁", "N513-葉懿嬋", "N530-龍家文", "N639-曾意晴", "N645-賴妙貞", "N881-曾莉雯", "N994-林昱均", "M028-董祐慈", "M226-徐郁雯", "M296-吳佳玲", "M343-黃悅綺", "M510-陳建儒", "M536-張盈綺", "M637-劉佳豫", "M697-張文甄", "N054-陳思宇", "M701-蔡昀珊", "M775-劉芷凌", "M240-黃茗媐", "N047-劉芳柔", "2801-新人專用"];
     const dbKey = "8F_MISSING_ITEMS_V16"; 
-    
-    // 請確認您的 GAS 網址已更新
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyve4I9dSxGnig8z9pOzXwMaYewGuTuLFn71tEo3dmMYazW4hT57QEk5apakJg4WEF1AA/exec"; 
 
-    let items = []; // 初始設為空，等待雲端載入
+    let items = [];
 
     function initUserList() {
         const select = document.getElementById('user_select');
@@ -106,6 +122,11 @@
             const tr = document.createElement('tr');
             if (item.isNew) tr.className = "row-new";
             
+            // 💡 權限判斷
+            const canEdit = item.isNew || (user !== "" && item.stamp === user) || isAdmin;
+            // 💡 如果不能編輯，就套用 cell-locked 類別
+            const lockedClass = canEdit ? "" : "cell-locked"; 
+
             let sClass = "status-default";
             if(item.status === "已申請") sClass = "status-applied";
             if(item.status === "已回") sClass = "status-received";
@@ -113,10 +134,10 @@
             if(item.status === "缺貨中") sClass = "status-oos";
 
             tr.innerHTML = `
-                <td><input type="date" value="${item.date}" onchange="updateItem(${index}, 'date', this.value)"></td>
-                <td><input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)"></td>
-                <td>
-                    <select class="status-select ${sClass}" ${isAdmin ? '' : 'disabled'} onchange="updateItem(${index}, 'status', this.value)">
+                <td class="${lockedClass}"><input type="date" value="${item.date}" onchange="updateItem(${index}, 'date', this.value)"></td>
+                <td class="${lockedClass}"><input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)"></td>
+                <td class="${lockedClass}">
+                    <select class="status-select ${sClass}" onchange="updateItem(${index}, 'status', this.value)">
                         <option value="未處理" ${item.status==='未處理'?'selected':''}>未處理</option>
                         <option value="已申請" ${item.status==='已申請'?'selected':''}>已申請</option>
                         <option value="已回" ${item.status==='已回'?'selected':''}>已回</option>
@@ -125,13 +146,14 @@
                     </select>
                 </td>
                 <td>${item.stamp ? `<span class="stamp">${item.stamp.replace('-', '<br>')}</span>` : ''}</td>
-                <td><input type="text" style="text-align:left; padding-left:5px;" value="${item.note || ''}" onchange="updateItem(${index}, 'note', this.value)"></td>
+                <td class="${lockedClass}"><input type="text" style="text-align:left; padding-left:5px;" value="${item.note || ''}" onchange="updateItem(${index}, 'note', this.value)"></td>
                 <td style="display:${isAdmin ? 'table-cell' : 'none'}"><button style="color:red; background:none; border:none; cursor:pointer;" onclick="deleteRow(${index})">✖</button></td>
             `;
             tbody.appendChild(tr);
         });
     }
 
+    // --- 其餘函式保持不變 ---
     function addRow() { 
         const newId = Date.now() + Math.random().toString(36).substr(2, 9);
         items.push({ date: new Date().toISOString().split('T')[0], name: "", status: "未處理", stamp: "", note: "", isNew: true, id: newId }); 
@@ -146,16 +168,18 @@
     async function stampAllAndSave() {
         const user = document.getElementById('user_select').value;
         if(!user) return alert("請先選擇執行人！");
+        let count = 0;
         items.forEach(item => { 
             if(item.name && !item.stamp) { 
                 item.stamp = user; 
                 item.isNew = false; 
+                count++;
             } 
         });
         saveToLocal();
         await syncToCloud();
         renderTable();
-        alert("簽章完成並同步雲端！");
+        alert(count > 0 ? "簽章完成並同步雲端！" : "沒有需要簽章的新項目。");
     }
 
     async function manualSave() { 
@@ -190,14 +214,10 @@
         try {
             const response = await fetch(GAS_URL);
             const cloudData = await response.json();
-            
-            // 💡 核心修正：只要連上雲端，就以雲端資料為準 (即便雲端是空的)
             items = cloudData || []; 
-            saveToLocal(); // 把本機快取也同步更新為空，避免舊資料殘留
+            saveToLocal();
             renderTable();
-            console.log("雲端資料同步完畢");
         } catch (e) { 
-            console.log("無法取得雲端資料，改讀本機備份");
             items = JSON.parse(localStorage.getItem(dbKey)) || [];
             renderTable();
         }
@@ -209,7 +229,7 @@
 
     window.onload = () => { 
         initUserList(); 
-        loadFromCloud(); // 優先載入雲端資料
+        loadFromCloud(); 
     };
 </script>
 </body>
