@@ -5,125 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>8F助理員專用系統</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; background: #f4f7f6; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: "Microsoft JhengHei", sans-serif; background: #f0f3f5; overflow: hidden; }
         
-        .main-wrapper { display: flex; height: 100vh; width: 100vw; position: relative; }
-        
-        /* 💡 側邊欄：改為絕對定位，不佔據空間，避免擠壓內容 */
-        .sidebar { 
+        /* 💡 啟動首頁：大按鈕畫面 */
+        #home_screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             position: absolute;
             top: 0;
             left: 0;
-            width: 260px; 
-            height: 100%;
-            background: #2c3e50; 
-            color: white; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 4px 0 10px rgba(0,0,0,0.3); 
-            z-index: 2000; /* 確保在最前方 */
-            transition: transform 0.3s ease-in-out;
-            transform: translateX(0); /* 預設顯示 */
+            z-index: 2000;
+            transition: transform 0.4s ease;
         }
 
-        /* 💡 隱藏狀態：直接移出螢幕外 */
-        .sidebar.collapsed {
-            transform: translateX(-110%);
-        }
+        /* 當選定功能後，首頁往上滑消失 */
+        #home_screen.hidden { transform: translateY(-100%); }
 
-        .sidebar-header { padding: 30px 20px; font-weight: bold; font-size: 20px; background: #1a252f; text-align: center; }
-        
-        .nav-item { 
-            padding: 20px; cursor: pointer; border-left: 5px solid transparent; 
-            transition: 0.3s; font-size: 17px; border-bottom: 1px solid #34495e;
-        }
-        .nav-item:hover { background: #34495e; }
-        .nav-item.active { background: #3498db; border-left-color: #fff; }
+        .system-title { color: white; font-size: 28px; margin-bottom: 40px; letter-spacing: 2px; font-weight: bold; }
 
-        /* 💡 內容區：永遠保持 100% 寬度，不再被擠壓 */
-        .content-frame-container { 
-            width: 100%; 
-            height: 100%; 
-            background: #fff; 
-        }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
+        .menu-container { display: flex; flex-direction: column; gap: 20px; width: 85%; max-width: 400px; }
 
-        /* 💡 漢堡按鈕：改為圓形浮動感，更適合手機點擊 */
-        .toggle-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px; 
-            z-index: 1500;
-            background: #2c3e50;
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-            border-radius: 50%;
+        /* 💡 大圖示按鈕樣式 */
+        .menu-btn {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
             font-size: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            font-weight: bold;
+            color: #2c3e50;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            gap: 15px;
         }
+        .menu-btn:active { transform: scale(0.95); background: #ecf0f1; }
+        .menu-btn i { font-size: 24px; }
 
-        /* 💡 遮罩層：選單打開時，背景變暗 */
-        .overlay {
+        /* 💡 內容區：佔滿全螢幕 */
+        .content-area { width: 100vw; height: 100vh; position: relative; background: white; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* 💡 返回按鈕：在表格畫面的左上角 */
+        #back_btn {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1800;
-            display: none;
+            top: 15px;
+            left: 15px;
+            background: rgba(44, 62, 80, 0.8);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 1000;
+            display: none; /* 預設隱藏，進入表格才顯示 */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .sidebar:not(.collapsed) ~ .overlay { display: block; }
-
-        /* 📱 手機版專屬樣式 */
-        @media screen and (max-width: 768px) {
-            .sidebar { width: 80vw; }
-            .nav-item { padding: 25px 20px; font-size: 20px; }
-            .sidebar-header { font-size: 22px; }
-        }
-
-        @media print { .sidebar, .toggle-btn, .overlay { display: none !important; } }
     </style>
 </head>
 <body>
 
-<button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">☰</button>
+    <div id="home_screen">
+        <div class="system-title">8F 助理員系統</div>
+        <div class="menu-container">
+            <button class="menu-btn" onclick="openFrame('page1.html')">📋 助理員工作登記表</button>
+            <button class="menu-btn" onclick="openFrame('page2.html')">📦 缺物登記紀錄表</button>
+            <button class="menu-btn" onclick="openFrame('page3.html')">🛠️ 請修登記紀錄表</button>
+        </div>
+        <div style="color: rgba(255,255,255,0.5); margin-top: 50px; font-size: 12px;">v2026.03 版</div>
+    </div>
 
-<div class="main-wrapper">
-    <aside class="sidebar collapsed" id="sidebar">
-        <div class="sidebar-header">8F助理員系統</div>
-        <div class="nav-item active" onclick="switchFrame('page1.html', this)">助理員工作登記表</div>
-        <div class="nav-item" onclick="switchFrame('page2.html', this)">缺物登記紀錄表</div>
-        <div class="nav-item" onclick="switchFrame('page3.html', this)">請修登記紀錄表</div>
-    </aside>
+    <div class="content-area">
+        <button id="back_btn" onclick="goBack()">⬅ 返回主選單</button>
+        <iframe id="display_box" src=""></iframe>
+    </div>
 
-    <div class="overlay" onclick="toggleSidebar()"></div>
+    <script>
+        function openFrame(url) {
+            const displayBox = document.getElementById('display_box');
+            const home = document.getElementById('home_screen');
+            const backBtn = document.getElementById('back_btn');
 
-    <main class="content-frame-container">
-        <iframe id="display_box" src="page1.html"></iframe>
-    </main>
-</div>
+            displayBox.src = url; // 載入網頁
+            home.classList.add('hidden'); // 隱藏首頁
+            backBtn.style.display = 'block'; // 顯示返回按鈕
+        }
 
-<script>
-    function switchFrame(url, el) {
-        document.getElementById('display_box').src = url;
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-        el.classList.add('active');
-        toggleSidebar(); // 選好後自動收起
-    }
-
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('collapsed');
-    }
-</script>
-
+        function goBack() {
+            const home = document.getElementById('home_screen');
+            const backBtn = document.getElementById('back_btn');
+            
+            home.classList.remove('hidden'); // 顯示首頁
+            backBtn.style.display = 'none'; // 隱藏返回按鈕
+            
+            // 可選：返回時清空 iframe 節省資源
+            // document.getElementById('display_box').src = "";
+        }
+    </script>
 </body>
 </html>
