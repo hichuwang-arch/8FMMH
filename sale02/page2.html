@@ -18,21 +18,18 @@
         .col-note { width: auto; }
         .col-del { width: 40px; }
         
-        /* 統一輸入框樣式，確保文字清晰 */
         input[type="date"], input[type="text"] { width: 95%; border: none; outline: none; font-size: 15px; text-align: center; background: transparent; color: black; opacity: 1; -webkit-text-fill-color: black; }
         
-        /* 💡 重新定義「鎖定」樣式：背景不變，僅顯示禁止符號 */
         .cell-locked { 
-            background-color: white !important; /* 確保背景保持白色 */
-            cursor: not-allowed; /* 滑鼠變成禁止圖示 */
+            background-color: white !important;
+            cursor: not-allowed; 
         }
         
-        /* 💡 關鍵：禁用 input 和 select 的所有滑鼠事件 */
         .cell-locked input, .cell-locked select { 
-            color: black !important; /* 文字保持黑色 */
-            -webkit-text-fill-color: black !important; /* 針對 Webkit 瀏覽器強制黑色 */
-            pointer-events: none; /* 禁用點擊、選擇等所有滑鼠事件 */
-            cursor: not-allowed; /* 保險起見，輸入框本身也設為禁止圖示 */
+            color: black !important;
+            -webkit-text-fill-color: black !important;
+            pointer-events: none;
+            cursor: not-allowed; 
         }
 
         .status-select { width: 90%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; color: black; opacity: 1; }
@@ -121,10 +118,7 @@
         items.forEach((item, index) => {
             const tr = document.createElement('tr');
             if (item.isNew) tr.className = "row-new";
-            
-            // 💡 權限判斷
             const canEdit = item.isNew || (user !== "" && item.stamp === user) || isAdmin;
-            // 💡 如果不能編輯，就套用 cell-locked 類別
             const lockedClass = canEdit ? "" : "cell-locked"; 
 
             let sClass = "status-default";
@@ -153,16 +147,29 @@
         });
     }
 
-    // --- 其餘函式保持不變 ---
     function addRow() { 
         const newId = Date.now() + Math.random().toString(36).substr(2, 9);
         items.push({ date: new Date().toISOString().split('T')[0], name: "", status: "未處理", stamp: "", note: "", isNew: true, id: newId }); 
         renderTable(); 
     }
 
+    // 💡 已修改的 updateItem 函式
     function updateItem(index, field, value) { 
         items[index][field] = value; 
-        if(field === 'status') renderTable(); 
+        
+        if (field === 'status' && value === '已申請') {
+            const today = new Date().toISOString().split('T')[0];
+            const applyDate = prompt("請輸入/確認申請日期：", today);
+            if (applyDate) {
+                const originalNote = items[index]['note'] || "";
+                // 檢查是否已經有申請日期的備註，避免重複疊加
+                if (!originalNote.includes("申請]")) {
+                    items[index]['note'] = `[${applyDate} 申請] ` + originalNote;
+                }
+            }
+        }
+        
+        renderTable(); 
     }
 
     async function stampAllAndSave() {
