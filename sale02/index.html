@@ -2,60 +2,130 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.6, maximum-scale=1.0, user-scalable=yes">
-    <title>8F助理員專用系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.75, maximum-scale=1.0, user-scalable=yes">
+    <title>8W助理員專用系統</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: "Microsoft JhengHei", sans-serif; background: #f0f3f5; }
         
         #home_screen {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 2000; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         #home_screen.hidden { transform: translateY(-100%); }
-        .system-title { color: white; font-size: 28px; margin-bottom: 40px; font-weight: bold; letter-spacing: 2px; }
+
+        .system-title { color: white; font-size: 28px; margin-bottom: 40px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 85%; max-width: 400px; }
+        
         .big-btn {
-            background: white; padding: 25px; border-radius: 15px;
-            text-align: center; font-size: 20px; font-weight: bold; color: #2c3e50;
-            border: none; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-            display: flex; align-items: center; justify-content: center; gap: 15px;
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px;
+            text-align: center; 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #2c3e50;
+            border: none; 
+            cursor: pointer; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
         .big-btn:active { transform: scale(0.96); background: #ecf0f1; }
+
         .content-area { width: 100vw; height: 100vh; background: white; position: relative; }
         iframe { width: 100%; height: 100%; border: none; display: block; }
+
         #back_btn {
-            position: absolute; top: 12px; left: 12px; z-index: 1500;
-            background: rgba(44, 62, 80, 0.9); color: white; border: none;
-            padding: 10px 18px; border-radius: 50px; font-size: 15px; font-weight: bold;
-            cursor: pointer; display: none;
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 1500;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: none; 
+            transition: background 0.3s;
         }
+        #back_btn:active { background: #3498db; }
+
+        @media print { #home_screen, #back_btn { display: none !important; } }
     </style>
 </head>
 <body>
+
     <div id="home_screen">
-        <div class="system-title">8F 助理員系統</div>
+        <div class="system-title">8W助理員專用系統</div>
         <div class="menu-container">
-            <button class="big-btn" onclick="openFrame('page1.html')">📋 助理員工作登記表</button>
-            <button class="big-btn" onclick="openFrame('page2.html')">📦 缺物登記紀錄表</button>
-            <button class="big-btn" onclick="openFrame('page3.html')">🛠️ 請修登記紀錄表</button>
+            <button class="big-btn" onclick="openFrame('page1.html')">助理員工作登記表</button>
+            <button class="big-btn" onclick="openFrame('page2.html')">缺物登記紀錄表</button>
+            <button class="big-btn" onclick="openFrame('page3.html')">請修登記紀錄表</button>
         </div>
+        <div style="color: rgba(255,255,255,0.4); margin-top: 60px; font-size: 13px;">切換功能請點擊左上角返回</div>
     </div>
+
     <div class="content-area">
         <button id="back_btn" onclick="goHome()">⬅ 返回主選單</button>
         <iframe id="display_box" src=""></iframe>
     </div>
+
     <script>
+        const home = document.getElementById('home_screen');
+        const backBtn = document.getElementById('back_btn');
+        const iframe = document.getElementById('display_box');
+
         function openFrame(url) {
-            document.getElementById('display_box').src = url;
-            document.getElementById('home_screen').classList.add('hidden');
-            document.getElementById('back_btn').style.display = 'block';
+            iframe.src = url;          
+            home.classList.add('hidden'); 
+            backBtn.style.display = 'block'; 
         }
+
+        // 💡 修改後的返回函數：加入未存檔檢查
         function goHome() {
-            document.getElementById('home_screen').classList.remove('hidden');
-            document.getElementById('back_btn').style.display = 'none';
+            try {
+                // 取得子頁面的視窗物件
+                const childWindow = iframe.contentWindow;
+                
+                // 檢查子頁面是否有定義 checkUnsaved 函數，並確認是否有未存檔資料
+                if (typeof childWindow.checkUnsaved === 'function' && childWindow.checkUnsaved()) {
+                    if (!confirm("⚠️ 您有尚未儲存的變更（如新增項目），確定要返回主選單嗎？\n\n按「確定」將不儲存直接離開。")) {
+                        return; // 使用者取消，停留在表格頁面
+                    }
+                }
+            } catch (e) {
+                // 跨網域或讀取錯誤時的保險措施 (一般 Z 槽存取不會遇到)
+                console.warn("無法檢查子頁面狀態:", e);
+            }
+
+            // 執行返回動作
+            home.classList.remove('hidden'); 
+            backBtn.style.display = 'none';    
+            iframe.src = ""; // 返回後清空，釋放記憶體
         }
+
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) { e.preventDefault(); }
+        }, { passive: false });
     </script>
+
 </body>
 </html>
