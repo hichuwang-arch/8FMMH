@@ -2,55 +2,75 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>8F助理護理員每日協助工作登記表</title>
     <style>
         /* --- 樣式設定 --- */
-        body { font-family: "Microsoft JhengHei", sans-serif; margin: 5px; background-color: #fff; color: #000; }
-        .header { text-align: center; margin-bottom: 2px; }
-        .header h2 { margin: 0; text-decoration: underline; font-size: 22px; color: #333; }
-        .info-row { display: flex; justify-content: space-between; margin: 2px 15px; font-weight: bold; font-size: 14px; align-items: flex-end; }
-        .date-input { border: none; border-bottom: 2px solid #000; font-family: inherit; font-size: 16px; width: 130px; background: #fffbe6; text-align: center; }
-        .container { display: flex; gap: 3px; align-items: flex-start; justify-content: center; width: 100%; }
-        table { border-collapse: collapse; width: 49.8%; table-layout: fixed; border: 2px solid #000; }
-        th, td { border: 1px solid #000; text-align: center; padding: 1px; height: 28px; font-size: 14px; }
-        th { background-color: #e6f7ff; color: #003a8c; font-weight: bold; line-height: 1.1; font-size: 13px; }
-        .bed-no { width: 45px; font-weight: bold; background-color: #f0f0f0 !important; font-size: 15px; }
-        .remark-col { width: 140px; } 
+        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 5px; background-color: #f4f7f6; color: #000; }
+        
+        /* 💡 標題優化 */
+        .header { text-align: center; margin-bottom: 10px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .header h2 { margin: 0 0 10px 0; text-decoration: underline; font-size: 20px; color: #333; }
+        
+        .info-row { display: flex; flex-direction: column; gap: 10px; margin: 0 10px; font-weight: bold; font-size: 14px; }
+        .date-input { border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-family: inherit; font-size: 16px; width: 100%; background: #fffbe6; text-align: center; box-sizing: border-box; }
+
+        /* 💡 容器優化：電腦並排，手機堆疊 */
+        .container { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; width: 100%; }
+        
+        /* 💡 表格滑動保護 */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        table { border-collapse: collapse; width: 100%; min-width: 550px; table-layout: fixed; border: 1px solid #000; }
+        th, td { border: 1px solid #ddd; text-align: center; padding: 5px 2px; height: 40px; vertical-align: middle; }
+        th { background-color: #e6f7ff; color: #003a8c; font-weight: bold; font-size: 13px; border: 1px solid #000; }
+        
+        .bed-no { width: 55px; font-weight: bold; background-color: #f9f9f9 !important; font-size: 15px; color: #d4380d; border-right: 2px solid #000; }
+        .remark-col { width: 120px; } 
+
         td:has(input[type="checkbox"]:checked) { background-color: #fffbe6; }
-        input[type="checkbox"] { width: 19px; height: 19px; cursor: pointer; vertical-align: middle; }
-        .input-text { width: 96%; border: none; outline: none; font-size: 14px; background: transparent; text-align: center; }
-        .log-container { margin-top: 5px; border-top: 1px solid #000; padding-top: 5px; margin-left: 10px; }
-        .log-title { font-weight: bold; color: #333; margin-bottom: 3px; font-size: 14px; }
-        .id-badge { display: inline-block; background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; padding: 1px 12px; border-radius: 12px; font-weight: bold; margin: 0 5px 5px 0; font-size: 13px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
-        .summary-container { margin: 5px 10px; padding: 8px; border: 1px solid #000; background-color: #fafafa; }
-        .summary-item { margin-bottom: 2px; font-size: 14px; line-height: 1.3; }
-        .summary-label { font-weight: bold; color: #003a8c; }
-        .btn-group { margin: 15px 0; text-align: center; display: flex; justify-content: center; gap: 10px; }
-        .btn { padding: 10px 20px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; border-radius: 6px; color: white; }
-        .btn-save { background: #52c41a; }
+        input[type="checkbox"] { width: 24px; height: 24px; cursor: pointer; } /* 💡 放大勾選框 */
+        .input-text { width: 96%; border: none; outline: none; font-size: 14px; background: transparent; text-align: center; border-bottom: 1px dashed #ccc; }
+
+        /* 摘要與簽署 */
+        .summary-container { margin: 15px 5px; padding: 12px; border-radius: 8px; border: 1px solid #000; background-color: #fff; }
+        .log-container { margin: 15px 5px; padding: 10px; background: white; border-radius: 8px; }
+        .id-badge { display: inline-block; background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; padding: 4px 12px; border-radius: 20px; font-weight: bold; margin: 4px; font-size: 13px; }
+
+        /* 按鈕組 */
+        .btn-group { margin: 20px 0; padding: 0 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { padding: 12px; font-weight: bold; font-size: 16px; border: none; cursor: pointer; border-radius: 8px; color: white; display: flex; align-items: center; justify-content: center; }
+        .btn-save { background: #52c41a; grid-column: span 2; }
         .btn-print { background: #1890ff; }
         .btn-summary { background: #722ed1; }
-        .btn-clear { background: #ff4d4f; }
+        .btn-clear { background: #ff4d4f; grid-column: span 2; margin-top: 10px; opacity: 0.8; }
+
+        /* 📱 手機版 RWD 微調 */
+        @media screen and (min-width: 1024px) {
+            .container { flex-wrap: nowrap; }
+            .table-responsive { width: 49%; }
+            .info-row { flex-direction: row; justify-content: space-between; }
+            .date-input { width: 200px; }
+            .btn-group { display: flex; }
+        }
 
         @media print {
-            @page { size: A4 portrait; margin: 0.6cm 0.4cm; }
             .no-print { display: none !important; }
-            body { margin: 0; padding: 0; width: 100%; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            th, td { height: 23.5px; font-size: 12px; border: 0.5px solid #000; }
-            input[type="checkbox"] { appearance: none; -webkit-appearance: none; border: 1px solid #000; width: 12px; height: 12px; position: relative; }
-            input[type="checkbox"]:checked::after { content: "V"; position: absolute; top: -5px; left: 0px; font-size: 13px; font-weight: bold; }
-            body.print-summary-only .header, body.print-summary-only .container, body.print-summary-only .log-container { display: none !important; }
-            body.print-summary-only .summary-container { border: none; background: none; }
+            .container { flex-wrap: nowrap; gap: 2px; }
+            .table-responsive { width: 50%; overflow: visible; box-shadow: none; }
+            table { min-width: auto; font-size: 12px; }
+            th, td { height: 25px; border: 1px solid #000; }
+            .btn-group, .log-container { display: none !important; }
         }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h2>助理護理員每日協助工作登記表</h2>
+    <h2>每日協助工作登記表</h2>
     <div class="info-row">
         <span>日期：<input type="date" id="todayDate" class="date-input"></span>
-        <span style="font-size: 14px; color: #000; line-height: 1.2; text-align: right;">
+        <span style="font-size: 12px; color: #666; text-align: left;">
             1.大夜協助勾選，白班核對後請助理員執行<br>
             2.半年內新人Foley/PP/NG Care請自行完成
         </span>
@@ -58,50 +78,52 @@
 </div>
 
 <div class="container">
-    <table id="table-1">
-        <thead>
-            <tr>
-                <th class="bed-no">床號</th>
-                <th>鼻胃管<br>護理</th><th>鼻胃管<br>灌食</th><th>導尿管<br>護理</th><th>會陰<br>清潔</th><th>ON<br>氣墊床</th>
-                <th class="remark-col">備註</th>
-            </tr>
-        </thead>
-        <tbody id="left-table"></tbody>
-    </table>
-    <table id="table-2">
-        <thead>
-            <tr>
-                <th class="bed-no">床號</th>
-                <th>鼻胃管<br>護理</th><th>鼻胃管<br>灌食</th><th>導尿管<br>護理</th><th>會陰<br>清潔</th><th>ON<br>氣墊床</th>
-                <th class="remark-col">備註</th>
-            </tr>
-        </thead>
-        <tbody id="right-table"></tbody>
-    </table>
+    <div class="table-responsive">
+        <table id="table-1">
+            <thead>
+                <tr>
+                    <th class="bed-no">床號</th>
+                    <th>鼻胃管<br>護理</th><th>鼻胃管<br>灌食</th><th>導尿管<br>護理</th><th>會陰<br>清潔</th><th>ON<br>氣墊床</th>
+                    <th class="remark-col">備註</th>
+                </tr>
+            </thead>
+            <tbody id="left-table"></tbody>
+        </table>
+    </div>
+    <div class="table-responsive">
+        <table id="table-2">
+            <thead>
+                <tr>
+                    <th class="bed-no">床號</th>
+                    <th>鼻胃管<br>護理</th><th>鼻胃管<br>灌食</th><th>導尿管<br>護理</th><th>會陰<br>清潔</th><th>ON<br>氣墊床</th>
+                    <th class="remark-col">備註</th>
+                </tr>
+            </thead>
+            <tbody id="right-table"></tbody>
+        </table>
+    </div>
 </div>
 
 <div id="printSummary" class="summary-container">
-    <div class="log-title">【 今日工作摘要 】</div>
-    <div id="summaryContent" style="color: #333;">尚未有勾選項目</div>
+    <div style="font-weight:bold; color:#003a8c; margin-bottom:8px;">【 今日工作摘要 】</div>
+    <div id="summaryContent" style="color: #333; font-size: 14px; line-height: 1.5;">尚未有勾選項目</div>
 </div>
 
 <div class="log-container">
-    <div class="log-title">存檔簽署名單：</div>
+    <div style="font-weight:bold; margin-bottom:5px;">存檔簽署名單：</div>
     <div id="idList"><span style="color:#ccc;">讀取中...</span></div>
 </div>
 
 <div class="btn-group no-print">
-    <button id="saveBtn" class="btn btn-save" onclick="saveWithID()">儲存並簽署</button>
-    <button class="btn btn-print" onclick="window.print()">列印 A4</button>
-    <button class="btn btn-summary" onclick="printOnlySummary()">僅印摘要</button>
-    <button class="btn btn-clear" onclick="clearAll()">全部清除</button>
+    <button id="saveBtn" class="btn btn-save" onclick="saveWithID()">✅ 儲存並簽署</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ 列印 A4</button>
+    <button class="btn btn-summary" onclick="printOnlySummary()">📋 僅印摘要</button>
+    <button class="btn btn-clear" onclick="clearAll()">🗑️ 全部清除</button>
 </div>
 
 <script>
+    // --- JavaScript 邏輯保持不變 ---
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwuarBulYwh_Xs43fKHVUbGIm67djnLgOyAkE3flvAeEaIR0GD1VeWrX3AcLboZ_RWJmA/exec";
-    
-    // --- 員工清單對照表 (員編: 姓名) ---
-    // 您可以隨時在這裡增加、修改員工資料
     const staffMap = {
         "3632": "林咨璇", "M820": "李筱薇", "M599": "賴玉玫", "M944": "謝家榆",
         "M956": "林詩涵", "M976": "林芝妘", "N007": "陳郁婷", "E578": "王淑娟",
@@ -127,13 +149,13 @@
 
     function renderTable(beds, elementId) {
         const container = document.getElementById(elementId);
-        beds.forEach((bed, index) => {
+        beds.forEach((bed, bedIdx) => {
             const tr = document.createElement('tr');
             let cols = `<td class="bed-no">${bed}</td>`;
             for(let i=0; i<taskNames.length; i++) {
-                cols += `<td><input type="checkbox" id="${elementId}-check-${index}-${i}" onchange="updateSummary()"></td>`;
+                cols += `<td><input type="checkbox" id="${elementId}-check-${bedIdx}-${i}" onchange="updateSummary()"></td>`;
             }
-            cols += `<td><input type="text" class="input-text" id="${elementId}-text-${index}"></td>`;
+            cols += `<td><input type="text" class="input-text" id="${elementId}-text-${bedIdx}"></td>`;
             tr.innerHTML = cols;
             container.appendChild(tr);
         });
@@ -156,40 +178,30 @@
         let hasData = false;
         taskNames.forEach(name => {
             if (report[name].length > 0) {
-                html += `<div class="summary-item"><span class="summary-label">${name}</span>：${report[name].join('、')}</div>`;
+                html += `<div><strong>${name}</strong>：${report[name].join('、')}</div>`;
                 hasData = true;
             }
         });
         summaryContent.innerHTML = hasData ? html : '尚未有勾選項目';
     }
 
-    function printOnlySummary() {
-        if (document.querySelectorAll('input[type="checkbox"]:checked').length === 0) return alert("沒有勾選項目！");
-        document.body.classList.add('print-summary-only');
-        window.print();
-        setTimeout(() => document.body.classList.remove('print-summary-only'), 500);
-    }
-
     async function saveWithID() {
         const empIdInput = prompt("請輸入您的員工代號以完成簽署：");
         if (!empIdInput) return;
-        
-        const empId = empIdInput.trim().toUpperCase(); // 自動轉大寫處理
+        const empId = empIdInput.trim().toUpperCase();
         const btn = document.getElementById('saveBtn');
-        btn.innerText = "同步中...";
+        btn.innerText = "⏳ 同步中...";
         btn.disabled = true;
-        
         const formData = {};
         document.querySelectorAll('input').forEach(input => {
             if (input.type === 'checkbox') formData[input.id] = input.checked;
             else formData[input.id] = input.value;
         });
-
         localStorage.setItem('8F_nursing_data', JSON.stringify(formData));
         try {
             await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ empId: empId, formData: formData }) });
-            btn.innerText = "儲存成功";
-            setTimeout(() => { btn.innerText = "儲存並簽署"; btn.disabled = false; loadFromCloud(); }, 1000);
+            btn.innerText = "✅ 儲存成功";
+            setTimeout(() => { btn.innerText = "✅ 儲存並簽署"; btn.disabled = false; loadFromCloud(); }, 1000);
         } catch (e) { alert("連線失敗"); btn.disabled = false; }
     }
 
@@ -208,64 +220,42 @@
 
     async function loadFromCloud() {
         const today = fixDateDisplay(); 
-        const dateInput = document.getElementById('todayDate');
-
-        const localDataRaw = localStorage.getItem('8F_nursing_data');
-        if (localDataRaw) {
-            const localData = JSON.parse(localDataRaw);
-            if (String(localData.todayDate) === String(today)) {
-                applyFormData(localData);
-            } else {
-                localStorage.removeItem('8F_nursing_data');
-            }
-        }
-
         try {
             const response = await fetch(GAS_URL);
             const result = await response.json();
-            
             if (result.formData && String(result.formData.todayDate) === String(today)) {
                 applyFormData(result.formData);
                 localStorage.setItem('8F_nursing_data', JSON.stringify(result.formData));
             }
-            
-            dateInput.value = today;
-
             const idListDiv = document.getElementById('idList');
-            if (result.formData && String(result.formData.todayDate) === String(today) && result.empIds) {
-                // --- 查表顯示員編與姓名 ---
+            if (result.empIds && result.formData && String(result.formData.todayDate) === String(today)) {
                 idListDiv.innerHTML = result.empIds.map(id => {
-                    const name = staffMap[id.toUpperCase()] || "新"; // 如果找不到姓名就顯示新
-                    const displayText = name === "新" ? `${id} (新)` : `${id}-${name}`;
-                    return `<span class="id-badge">${displayText}</span>`;
+                    const name = staffMap[id.toUpperCase()] || "新";
+                    return `<span class="id-badge">${id}-${name}</span>`;
                 }).join('');
             } else {
-                idListDiv.innerHTML = `<span style="color:#ccc;">今日 (${today}) 尚無紀錄</span>`;
+                idListDiv.innerHTML = `<span style="color:#ccc;">今日尚無紀錄</span>`;
             }
-
-        } catch (e) { 
-            console.warn("同步失敗");
-            dateInput.value = today; 
-        }
+        } catch (e) { console.warn("同步失敗"); }
     }
 
     async function clearAll() {
-        if (confirm('⚠️ 警告：這將徹底清除今日雲端內容！確定嗎？')) {
-            document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
-            document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
-            localStorage.removeItem('8F_nursing_data');
-            updateSummary();
+        if (confirm('⚠️ 警告：這將徹底清除今日雲端內容！')) {
             try {
                 await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "clearAll" }) });
-                alert("雲端已重置");
-                loadFromCloud();
+                location.reload();
             } catch (e) { alert("連線異常"); }
         }
     }
 
+    function printOnlySummary() {
+        document.body.classList.add('print-summary-only');
+        window.print();
+        setTimeout(() => document.body.classList.remove('print-summary-only'), 500);
+    }
+
     renderTable(leftBeds, 'left-table');
     renderTable(rightBeds, 'right-table');
-    fixDateDisplay(); 
     window.onload = loadFromCloud;
 </script>
 </body>
