@@ -20,17 +20,8 @@
         
         input[type="date"], input[type="text"] { width: 95%; border: none; outline: none; font-size: 15px; text-align: center; background: transparent; color: black; opacity: 1; -webkit-text-fill-color: black; }
         
-        /* 鎖定樣式 */
-        .cell-locked { 
-            background-color: white !important;
-            cursor: not-allowed; 
-        }
-        .cell-locked input, .cell-locked select { 
-            color: black !important;
-            -webkit-text-fill-color: black !important;
-            pointer-events: none;
-            cursor: not-allowed; 
-        }
+        .cell-locked { background-color: white !important; cursor: not-allowed; }
+        .cell-locked input, .cell-locked select { color: black !important; -webkit-text-fill-color: black !important; pointer-events: none; cursor: not-allowed; }
 
         .status-select { width: 90%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; color: black; opacity: 1; }
         .status-default { background-color: #fff; color: #7f8c8d; }
@@ -87,6 +78,77 @@
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
+<style>
+    /* 💡 原本格式的「縮小版」 */
+    .workflow-box-small {
+        margin: 10px auto; /* 減少上下間距 */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 95%;
+        max-width: 600px; /* 寬度縮小，避免在寬螢幕拉太長 */
+        background: #fff;
+        border: 1px dashed #3498db; /* 邊框變細 */
+        border-radius: 8px;
+        padding: 8px 12px; /* 內距縮小 */
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .workflow-step {
+        flex: 1;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .step-num {
+        display: inline-block;
+        width: 18px;  /* 圓圈從 24px 縮小到 18px */
+        height: 18px;
+        background: #3498db;
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+        line-height: 18px;
+        margin-bottom: 3px;
+        font-size: 11px; /* 數字縮小 */
+    }
+    .step-text {
+        display: block;
+        font-size: 12px; /* 文字從 14px 縮小到 12px */
+        font-weight: bold;
+        color: #2c3e50;
+        white-space: nowrap;
+    }
+    .step-arrow {
+        color: #bdc3c7;
+        font-size: 14px; /* 箭頭縮小 */
+        padding: 0 5px;
+        margin-top: 20px; /* 讓箭頭對齊文字高度 */
+    }
+    @media print { .workflow-box-small { display: none !important; } }
+</style>
+
+<div class="workflow-box-small no-print">
+    <div class="workflow-step">
+        <span class="step-num">1</span>
+        <span class="step-text">選執行人</span>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="workflow-step">
+        <span class="step-num">2</span>
+        <span class="step-text">點選新增項目填寫</span>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="workflow-step">
+        <span class="step-num">3</span>
+        <span class="step-text">填寫完存檔簽章</span>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="workflow-step">
+        <span class="step-num">4</span>
+        <span class="step-text">返回主選單或關閉頁面即可</span>
+    </div>
+</div>
 </div>
 
 <script>
@@ -96,7 +158,6 @@
 
     let items = [];
 
-    // 💡 初始化月份選單：顯示最近 6 個月，且不早於 2026/03
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
         const displayCount = 6; 
@@ -139,12 +200,10 @@
         const isAdmin = ["N047", "M240", "E578"].some(p => user.startsWith(p));
         document.getElementById('del_header').style.display = isAdmin ? "table-cell" : "none";
 
-        // 更新大標題
         const [y, m] = filterMonth.split('-');
         document.getElementById('page_title').innerText = `${y}年${m}月 缺 物 登 記 表`;
 
         items.forEach((item, index) => {
-            // 💡 過濾月份：只顯示選定月份的資料，新項目不鎖定
             if (!item.date.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
@@ -164,9 +223,8 @@
                 <td class="${lockedClass}">
                     <select class="status-select ${sClass}" onchange="updateItem(${index}, 'status', this.value)">
                         <option value="未處理" ${item.status==='未處理'?'selected':''}>未處理</option>
-                        <option value="已申請" ${item.status==='已申請'?'selected':''}>已申請</option>
+                        <option value="已申請待回" ${item.status==='已申請待回'?'selected':''}>已申請待回</option>
                         <option value="已回" ${item.status==='已回'?'selected':''}>已回</option>
-                        <option value="待回" ${item.status==='待回'?'selected':''}>待回</option>
                         <option value="缺貨中" ${item.status==='缺貨中'?'selected':''}>缺貨中</option>
                     </select>
                 </td>
@@ -186,10 +244,9 @@
 
     function updateItem(index, field, value) { 
         items[index][field] = value; 
-        
-        if (field === 'status' && value === '已申請') {
+        if (field === 'status' && value === '已申請待回') {
             const today = new Date().toISOString().split('T')[0];
-            const applyDate = prompt("請輸入/確認申請日期：", today);
+            const applyDate = prompt("請輸入申請日期：", today);
             if (applyDate) {
                 const originalNote = items[index]['note'] || "";
                 if (!originalNote.includes("申請]")) {
@@ -234,10 +291,34 @@
         renderTable();
     }
     
+    // 💡 離開提醒邏輯：檢查是否有 isNew 項目 (尚未存檔的內容)
+    window.onbeforeunload = function (e) {
+        const hasUnsavedChanges = items.some(item => item.isNew);
+        if (hasUnsavedChanges) {
+            const message = "您有尚未存檔的項目，確定要離開嗎？";
+            e.returnValue = message; // 標準寫法
+            return message; // 部分舊瀏覽器寫法
+        }
+    };
+
     window.onload = () => { 
         initMonthFilter();
         initUserList(); 
         loadFromCloud(); 
+    };// 💡 提供給主頁面呼叫的檢查函數 (page2, page3 專用)
+    function checkUnsaved() {
+        if (typeof items !== 'undefined' && items.length > 0) {
+            // 只要有任何一筆資料是 isNew (新增且未存檔)，就回傳 true
+            return items.some(item => item.isNew === true);
+        }
+        return false;
+    }
+
+    // 保留瀏覽器原生關閉提醒
+    window.onbeforeunload = function (e) {
+        if (checkUnsaved()) {
+            return "您有尚未儲存的變更。";
+        }
     };
 </script>
 </body>
