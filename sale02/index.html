@@ -12,12 +12,12 @@
         .sidebar { 
             width: 220px; background: #2c3e50; color: white; 
             display: flex; flex-direction: column; flex-shrink: 0; 
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 10;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 1000;
             transition: all 0.3s ease;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
-        /* 💡 側邊欄隱藏時的狀態 */
+        /* 💡 側邊欄隱藏時徹底消失 (寬度 0) */
         .sidebar.collapsed {
             width: 0;
             margin-left: 0; 
@@ -35,21 +35,25 @@
         .content-frame-container { flex-grow: 1; background: #fff; position: relative; }
         iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* 漢堡選單按鈕 */
+        /* 💡 漢堡選單按鈕：增加寬度以容納文字 */
         .toggle-btn {
             position: absolute;
             top: 10px;
             left: 10px; 
-            z-index: 20;
+            z-index: 1100; /* 確保按鈕永遠在最上層 */
             background: #2c3e50;
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 8px 15px; /* 增加左右內距 */
             cursor: pointer;
             border-radius: 4px;
-            font-size: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 16px; /* 稍微縮小字體讓文字好排 */
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 圖示與文字的間距 */
         }
         .toggle-btn:hover { background: #3498db; }
 
@@ -58,11 +62,13 @@
 </head>
 <body>
 
-<button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">☰</button>
+<button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">
+    <span>☰</span> <span>功能選單</span>
+</button>
 
 <div class="main-wrapper">
     <aside class="sidebar collapsed" id="sidebar">
-        <div class="sidebar-header" style="padding-left: 50px;">8F助理員系統</div>
+        <div class="sidebar-header">8F助理員系統</div>
         <div class="nav-item active" onclick="switchFrame('page1.html', this)">助理員工作登記表</div>
         <div class="nav-item" onclick="switchFrame('page2.html', this)">缺物登記紀錄表</div>
         <div class="nav-item" onclick="switchFrame('page3.html', this)">請修登記紀錄表</div>
@@ -79,7 +85,7 @@
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
         
-        // 點擊後自動收起選單 (不論螢幕寬度，如果你希望點了功能就收起來)
+        // 點擊後自動收起選單
         const sidebar = document.getElementById('sidebar');
         if (!sidebar.classList.contains('collapsed')) {
             toggleSidebar();
