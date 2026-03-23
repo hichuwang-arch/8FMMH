@@ -7,78 +7,33 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: "Microsoft JhengHei", sans-serif; background: #f0f3f5; }
         
-        /* 💡 大圖示入口首頁 */
         #home_screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 2000; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        /* 隱藏時往上滑出螢幕 */
         #home_screen.hidden { transform: translateY(-100%); }
-
-        .system-title { color: white; font-size: 28px; margin-bottom: 40px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        
+        .system-title { color: white; font-size: 28px; margin-bottom: 40px; font-weight: bold; letter-spacing: 2px; }
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 85%; max-width: 400px; }
-        
-        /* 💡 超大按鈕樣式 */
         .big-btn {
-            background: white; 
-            padding: 25px; 
-            border-radius: 15px;
-            text-align: center; 
-            font-size: 20px; 
-            font-weight: bold; 
-            color: #2c3e50;
-            border: none; 
-            cursor: pointer; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-            transition: transform 0.1s, background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
+            background: white; padding: 25px; border-radius: 15px;
+            text-align: center; font-size: 20px; font-weight: bold; color: #2c3e50;
+            border: none; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center; gap: 15px;
         }
         .big-btn:active { transform: scale(0.96); background: #ecf0f1; }
-
-        /* 💡 表格內容區 (佔滿全螢幕) */
         .content-area { width: 100vw; height: 100vh; background: white; position: relative; }
         iframe { width: 100%; height: 100%; border: none; display: block; }
-
-        /* 💡 返回按鈕：僅在進入表格後顯示 */
         #back_btn {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            z-index: 1500;
-            background: rgba(44, 62, 80, 0.9);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 50px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: none; /* 預設隱藏 */
-            transition: background 0.3s;
+            position: absolute; top: 12px; left: 12px; z-index: 1500;
+            background: rgba(44, 62, 80, 0.9); color: white; border: none;
+            padding: 10px 18px; border-radius: 50px; font-size: 15px; font-weight: bold;
+            cursor: pointer; display: none;
         }
-        #back_btn:active { background: #3498db; }
-
-        @media print { #home_screen, #back_btn { display: none !important; } }
     </style>
 </head>
 <body>
-
     <div id="home_screen">
         <div class="system-title">8F 助理員系統</div>
         <div class="menu-container">
@@ -86,40 +41,21 @@
             <button class="big-btn" onclick="openFrame('page2.html')">📦 缺物登記紀錄表</button>
             <button class="big-btn" onclick="openFrame('page3.html')">🛠️ 請修登記紀錄表</button>
         </div>
-        <div style="color: rgba(255,255,255,0.4); margin-top: 60px; font-size: 13px;">切換功能請點擊左上角返回</div>
     </div>
-
     <div class="content-area">
         <button id="back_btn" onclick="goHome()">⬅ 返回主選單</button>
         <iframe id="display_box" src=""></iframe>
     </div>
-
     <script>
-        const home = document.getElementById('home_screen');
-        const backBtn = document.getElementById('back_btn');
-        const iframe = document.getElementById('display_box');
-
-        // 點擊大按鈕：進入表格
         function openFrame(url) {
-            iframe.src = url;          // 載入對應頁面
-            home.classList.add('hidden'); // 首頁滑出
-            backBtn.style.display = 'block'; // 顯示返回按鈕
+            document.getElementById('display_box').src = url;
+            document.getElementById('home_screen').classList.add('hidden');
+            document.getElementById('back_btn').style.display = 'block';
         }
-
-        // 點擊返回：回到首頁
         function goHome() {
-            home.classList.remove('hidden'); // 首頁滑回
-            backBtn.style.display = 'none';    // 隱藏返回按鈕
-            
-            // 💡 可選：回首頁時清空內容，下次進去才會重新讀取最新資料
-            // iframe.src = ""; 
+            document.getElementById('home_screen').classList.remove('hidden');
+            document.getElementById('back_btn').style.display = 'none';
         }
-
-        // 💡 額外優化：防止手機瀏覽器下拉重新整理影響操作
-        document.addEventListener('touchmove', function(e) {
-            if (e.scale !== 1) { e.preventDefault(); }
-        }, { passive: false });
     </script>
-
 </body>
 </html>
