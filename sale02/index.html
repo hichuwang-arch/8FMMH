@@ -17,7 +17,7 @@
             overflow: hidden;
         }
 
-        /* 💡 側邊欄隱藏時徹底消失 (寬度 0) */
+        /* 側邊欄隱藏時徹底消失 */
         .sidebar.collapsed {
             width: 0;
             margin-left: 0; 
@@ -35,27 +35,52 @@
         .content-frame-container { flex-grow: 1; background: #fff; position: relative; }
         iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* 💡 漢堡選單按鈕：增加寬度以容納文字 */
+        /* 漢堡選單按鈕 */
         .toggle-btn {
             position: absolute;
             top: 10px;
             left: 10px; 
-            z-index: 1100; /* 確保按鈕永遠在最上層 */
+            z-index: 1100;
             background: #2c3e50;
             color: white;
             border: none;
-            padding: 8px 15px; /* 增加左右內距 */
+            padding: 8px 15px;
             cursor: pointer;
             border-radius: 4px;
-            font-size: 16px; /* 稍微縮小字體讓文字好排 */
+            font-size: 16px;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             transition: background 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px; /* 圖示與文字的間距 */
+            gap: 8px;
         }
         .toggle-btn:hover { background: #3498db; }
+
+        /* 📱 核心修改：針對手機版 (螢幕寬度小於 768px) 的優化 */
+        @media screen and (max-width: 768px) {
+            .sidebar { 
+                width: 80vw; /* 展開時佔螢幕 80% 寬度 */
+            }
+
+            .toggle-btn {
+                padding: 12px 20px; /* 按鈕變大好點 */
+                font-size: 18px;
+                top: 15px;
+                left: 15px;
+            }
+
+            .nav-item {
+                padding: 25px 20px; /* 增加上下間距，變成大方塊按鈕感 */
+                font-size: 20px;    /* 字體放大到 20px */
+                border-bottom: 1px solid #34495e; /* 選項間增加分隔線 */
+            }
+
+            .sidebar-header {
+                padding: 30px 20px;
+                font-size: 22px;
+            }
+        }
 
         @media print { .sidebar, .toggle-btn { display: none !important; } }
     </style>
