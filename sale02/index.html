@@ -2,13 +2,13 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>8F助理員專用系統</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
         
         .main-wrapper { display: flex; height: 100vh; width: 100vw; position: relative; }
         
-        /* 側邊欄樣式 */
         .sidebar { 
             width: 220px; background: #2c3e50; color: white; 
             display: flex; flex-direction: column; flex-shrink: 0; 
@@ -17,11 +17,7 @@
             overflow: hidden;
         }
 
-        /* 側邊欄隱藏時徹底消失 */
-        .sidebar.collapsed {
-            width: 0;
-            margin-left: 0; 
-        }
+        .sidebar.collapsed { width: 0; margin-left: 0; }
 
         .sidebar-header { padding: 25px 20px; font-weight: bold; font-size: 18px; background: #1a252f; text-align: center; white-space: nowrap; }
         .nav-item { 
@@ -35,7 +31,6 @@
         .content-frame-container { flex-grow: 1; background: #fff; position: relative; }
         iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* 漢堡選單按鈕 */
         .toggle-btn {
             position: absolute;
             top: 10px;
@@ -50,35 +45,31 @@
             font-size: 16px;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: background 0.3s;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .toggle-btn:hover { background: #3498db; }
 
-        /* 📱 核心修改：針對手機版 (螢幕寬度小於 768px) 的優化 */
+        /* 📱 手機版優化 (當螢幕寬度小於 768px 時) */
         @media screen and (max-width: 768px) {
-            .sidebar { 
-                width: 80vw; /* 展開時佔螢幕 80% 寬度 */
-            }
+            .sidebar { width: 85vw; } /* 手機展開後佔據 85% 寬度 */
 
             .toggle-btn {
-                padding: 12px 20px; /* 按鈕變大好點 */
-                font-size: 18px;
+                padding: 15px 25px; /* 按鈕加寬加大 */
+                font-size: 20px;    /* 按鈕文字放大 */
                 top: 15px;
                 left: 15px;
             }
 
             .nav-item {
-                padding: 25px 20px; /* 增加上下間距，變成大方塊按鈕感 */
-                font-size: 20px;    /* 字體放大到 20px */
-                border-bottom: 1px solid #34495e; /* 選項間增加分隔線 */
+                padding: 30px 20px; /* 超大點擊區塊 */
+                font-size: 22px;    /* 超大文字 */
+                border-bottom: 1px solid #34495e;
             }
 
             .sidebar-header {
-                padding: 30px 20px;
-                font-size: 22px;
+                padding: 35px 20px;
+                font-size: 24px;
             }
         }
 
@@ -109,8 +100,6 @@
         document.getElementById('display_box').src = url;
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
-        
-        // 點擊後自動收起選單
         const sidebar = document.getElementById('sidebar');
         if (!sidebar.classList.contains('collapsed')) {
             toggleSidebar();
