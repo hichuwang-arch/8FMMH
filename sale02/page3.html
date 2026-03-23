@@ -86,6 +86,76 @@
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
+<style>
+    /* 💡 原本格式的「縮小版」 */
+    .workflow-box-small {
+        margin: 10px auto; /* 減少上下間距 */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 95%;
+        max-width: 600px; /* 寬度縮小，避免在寬螢幕拉太長 */
+        background: #fff;
+        border: 1px dashed #3498db; /* 邊框變細 */
+        border-radius: 8px;
+        padding: 8px 12px; /* 內距縮小 */
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .workflow-step {
+        flex: 1;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .step-num {
+        display: inline-block;
+        width: 18px;  /* 圓圈從 24px 縮小到 18px */
+        height: 18px;
+        background: #3498db;
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+        line-height: 18px;
+        margin-bottom: 3px;
+        font-size: 11px; /* 數字縮小 */
+    }
+    .step-text {
+        display: block;
+        font-size: 12px; /* 文字從 14px 縮小到 12px */
+        font-weight: bold;
+        color: #2c3e50;
+        white-space: nowrap;
+    }
+    .step-arrow {
+        color: #bdc3c7;
+        font-size: 14px; /* 箭頭縮小 */
+        padding: 0 5px;
+        margin-top: 20px; /* 讓箭頭對齊文字高度 */
+    }
+    @media print { .workflow-box-small { display: none !important; } }
+</style>
+
+<div class="workflow-box-small no-print">
+    <div class="workflow-step">
+        <span class="step-num">1</span>
+        <span class="step-text">選執行人</span>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="workflow-step">
+        <span class="step-num">2</span>
+        <span class="step-text">點選新增項目填寫</span>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="workflow-step">
+        <span class="step-num">3</span>
+        <span class="step-text">填寫完存檔簽章</span>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="workflow-step">
+        <span class="step-num">4</span>
+        <span class="step-text">返回主選單或關閉頁面即可</span>
+    </div>
 </div>
 
 <script>
@@ -238,6 +308,21 @@
         initMonthFilter();
         initUserList(); 
         loadFromCloud(); 
+    };
+// 💡 提供給主頁面呼叫的檢查函數 (page2, page3 專用)
+    function checkUnsaved() {
+        if (typeof items !== 'undefined' && items.length > 0) {
+            // 只要有任何一筆資料是 isNew (新增且未存檔)，就回傳 true
+            return items.some(item => item.isNew === true);
+        }
+        return false;
+    }
+
+    // 保留瀏覽器原生關閉提醒
+    window.onbeforeunload = function (e) {
+        if (checkUnsaved()) {
+            return "您有尚未儲存的變更。";
+        }
     };
 </script>
 </body>
