@@ -131,7 +131,7 @@
 <div class="workflow-box-small no-print">
     <div class="workflow-step">
         <span class="step-num">1</span>
-        <span class="step-text">選執行人</span>
+        <span class="step-text">請選執行人</span>
     </div>
     <div class="step-arrow">➔</div>
     <div class="workflow-step">
@@ -141,12 +141,12 @@
     <div class="step-arrow">➔</div>
     <div class="workflow-step">
         <span class="step-num">3</span>
-        <span class="step-text">填寫完存檔簽章</span>
+        <span class="step-text">填寫完請按存檔簽章</span>
     </div>
     <div class="step-arrow">➔</div>
     <div class="workflow-step">
         <span class="step-num">4</span>
-        <span class="step-text">返回主選單或關閉頁面即可</span>
+        <span class="step-text">存檔成功後返回主選單或關閉頁面即可</span>
     </div>
 </div>
 </div>
@@ -263,7 +263,7 @@
         let count = 0;
         items.forEach(item => { if(item.name && !item.stamp) { item.stamp = user; item.isNew = false; count++; } });
         saveToLocal(); await syncToCloud(); renderTable();
-        alert(count > 0 ? "簽章完成並同步雲端！" : "沒有需要簽章的新項目。");
+        alert(count > 0 ? "簽章完成並同步存檔！" : "沒有需要簽章的新項目。");
     }
 
     async function manualSave() { 
