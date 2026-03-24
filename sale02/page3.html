@@ -76,7 +76,7 @@
         <thead>
             <tr>
                 <th class="col-date">填單日期</th>
-                <th class="col-name">請修項目</th>
+                <th class="col-name">請修項目及狀態</th>
                 <th class="col-order">請修單開立</th>
                 <th class="col-status">目前狀態</th>
                 <th class="col-stamp">申請人簽章</th>
@@ -149,12 +149,12 @@
     <div class="step-arrow">➔</div>
     <div class="workflow-step">
         <span class="step-num">3</span>
-        <span class="step-text">填寫完存檔簽章</span>
+        <span class="step-text">填寫完請記得按存檔簽章</span>
     </div>
     <div class="step-arrow">➔</div>
     <div class="workflow-step">
         <span class="step-num">4</span>
-        <span class="step-text">返回主選單或關閉頁面即可</span>
+        <span class="step-text">存檔成功返回主選單或關閉頁面即可</span>
     </div>
 </div>
 
@@ -276,7 +276,7 @@
     }
 
     async function deleteRow(index) { 
-        if(confirm("確定刪除此筆資料並同步至雲端？")) { 
+        if(confirm("確定刪除此筆資料？")) { 
             items.splice(index, 1); saveToLocal(); renderTable(); await syncToCloud();
         } 
     }
@@ -289,7 +289,7 @@
     }
     async function manualSave() { 
         items.forEach(item => { item.isNew = false; if(!item.id) item.id = "ID-" + Date.now(); });
-        saveToLocal(); renderTable(); await syncToCloud(); alert("資料已儲存並同步至雲端！"); 
+        saveToLocal(); renderTable(); await syncToCloud(); alert("資料已儲存！"); 
     }
     function saveToLocal() { localStorage.setItem(dbKey, JSON.stringify(items)); }
     async function syncToCloud() {
