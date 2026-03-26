@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>請修登記表</title>
     <style>
+        /* --- CSS 樣式保持不變 --- */
         @page { size: landscape; margin: 1cm; }
         body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f3f5; }
         .page { background: white; width: 1150px; margin: auto; padding: 25px; border: 1px solid #ccc; position: relative; min-height: 700px; }
@@ -11,25 +12,20 @@
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th, td { border: 1px solid black; padding: 6px 2px; text-align: center; height: 45px; vertical-align: middle; }
         th { background-color: #f2f2f2; font-size: 14px; }
-
-        /* 💡 欄位寬度調整：縮短備註，增加狀態與開單長度 */
         .col-date   { width: 110px; } 
         .col-name   { width: 200px; }
-        .col-order  { width: 170px; }  /* 增加長度 */
-        .col-status { width: 170px; }  /* 增加長度 */
+        .col-order  { width: 170px; } 
+        .col-status { width: 170px; } 
         .col-stamp  { width: 100px; }
-        .col-note   { width: auto;  }  /* 剩餘空間給備註 */
+        .col-note   { width: auto;  } 
         .col-del    { width: 40px;  }
-
         input[type="date"], input[type="text"] { 
             width: 95%; border: none; outline: none; font-size: 14px; 
             text-align: center; background: transparent; color: black !important;
             opacity: 1 !important; -webkit-text-fill-color: black !important;
         }
-
         .cell-locked { cursor: not-allowed !important; }
         .cell-locked input, .cell-locked select { pointer-events: none; cursor: not-allowed !important; }
-
         .status-select { width: 95%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 13px; color: black !important; opacity: 1 !important; }
         .order-none { background-color: #f5f5f5; color: #999; }
         .order-done { background-color: #fff7e6; color: #fa8c16; border-color: #ffd591; }
@@ -37,18 +33,23 @@
         .status-applied { background-color: #fff9db; color: #f39c12; }
         .status-repairing { background-color: #e6f7ff; color: #1890ff; }
         .status-done { background-color: #f6ffed; color: #52c41a; }
-        
         .row-new { background-color: #fff9db !important; }
         .stamp { display: inline-block; border: 2px solid #d63031; color: #d63031; font-family: "標楷體", serif; font-weight: bold; font-size: 12px; padding: 2px; border-radius: 4px; transform: rotate(-5deg); }
-        
         .control-panel { background: #2c3e50; color: white; padding: 12px 20px; width: 1150px; margin: 0 auto 10px auto; border-radius: 8px; display: flex; gap: 15px; align-items: center; box-sizing: border-box; }
         select { height: 38px; font-size: 15px; border-radius: 5px; padding: 0 5px; }
         .btn { padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; border: none; font-size: 14px; }
         .btn-add { background: #27ae60; color: white; }
         .btn-stamp { background: #e67e22; color: white; }
         .btn-save { background: #f1c40f; color: #2c3e50; }
-        
         @media print { .control-panel, .col-del, #del_header { display: none !important; } body { background: white; padding: 0; } .page { border: none; width: 100%; padding: 0; margin: 0; } }
+        
+        /* 流程說明框樣式 */
+        .workflow-box-small { margin: 10px auto; display: flex; justify-content: space-between; align-items: center; width: 95%; max-width: 600px; background: #fff; border: 1px dashed #3498db; border-radius: 8px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .workflow-step { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .step-num { display: inline-block; width: 18px; height: 18px; background: #3498db; color: white; border-radius: 50%; font-weight: bold; line-height: 18px; margin-bottom: 3px; font-size: 11px; }
+        .step-text { display: block; font-size: 12px; font-weight: bold; color: #2c3e50; white-space: nowrap; }
+        .step-arrow { color: #bdc3c7; font-size: 14px; padding: 0 5px; margin-top: 20px; }
+        @media print { .workflow-box-small { display: none !important; } }
     </style>
 </head>
 <body>
@@ -86,80 +87,31 @@
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
-<style>
-    /* 💡 原本格式的「縮小版」 */
-    .workflow-box-small {
-        margin: 10px auto; /* 減少上下間距 */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 95%;
-        max-width: 600px; /* 寬度縮小，避免在寬螢幕拉太長 */
-        background: #fff;
-        border: 1px dashed #3498db; /* 邊框變細 */
-        border-radius: 8px;
-        padding: 8px 12px; /* 內距縮小 */
-        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
-    .workflow-step {
-        flex: 1;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .step-num {
-        display: inline-block;
-        width: 18px;  /* 圓圈從 24px 縮小到 18px */
-        height: 18px;
-        background: #3498db;
-        color: white;
-        border-radius: 50%;
-        font-weight: bold;
-        line-height: 18px;
-        margin-bottom: 3px;
-        font-size: 11px; /* 數字縮小 */
-    }
-    .step-text {
-        display: block;
-        font-size: 12px; /* 文字從 14px 縮小到 12px */
-        font-weight: bold;
-        color: #2c3e50;
-        white-space: nowrap;
-    }
-    .step-arrow {
-        color: #bdc3c7;
-        font-size: 14px; /* 箭頭縮小 */
-        padding: 0 5px;
-        margin-top: 20px; /* 讓箭頭對齊文字高度 */
-    }
-    @media print { .workflow-box-small { display: none !important; } }
-</style>
 
-<div class="workflow-box-small no-print">
-    <div class="workflow-step">
-        <span class="step-num">1</span>
-        <span class="step-text">選執行人</span>
-    </div>
-    <div class="step-arrow">➔</div>
-    <div class="workflow-step">
-        <span class="step-num">2</span>
-        <span class="step-text">點選新增項目填寫</span>
-    </div>
-    <div class="step-arrow">➔</div>
-    <div class="workflow-step">
-        <span class="step-num">3</span>
-        <span class="step-text">填寫完請記得按存檔簽章</span>
-    </div>
-    <div class="step-arrow">➔</div>
-    <div class="workflow-step">
-        <span class="step-num">4</span>
-        <span class="step-text">有跳出存檔成功畫面就代表你成功了</span>
+    <div class="workflow-box-small no-print">
+        <div class="workflow-step">
+            <span class="step-num">1</span>
+            <span class="step-text">選執行人</span>
+        </div>
+        <div class="step-arrow">➔</div>
+        <div class="workflow-step">
+            <span class="step-num">2</span>
+            <span class="step-text">點選新增項目填寫</span>
+        </div>
+        <div class="step-arrow">➔</div>
+        <div class="workflow-step">
+            <span class="step-num">3</span>
+            <span class="step-text">填寫完請記得按存檔簽章</span>
+        </div>
+        <div class="step-arrow">➔</div>
+        <div class="workflow-step">
+            <span class="step-num">4</span>
+            <span class="step-text">有跳出存檔成功畫面就代表你成功了</span>
+        </div>
     </div>
 </div>
 
 <script>
-    // JS 部分保持不變，包含自動月份選單、權限鎖定與開單彈窗邏輯
     const staffList = ["3632-林咨璇", "M820-李筱薇", "M599-賴玉玫", "M944-謝家榆", "M956-林詩涵", "M976-林芝妘", "N007-陳郁婷", "E578-王淑娟", "M798-吳依蓁", "N513-葉懿嬋", "N530-龍家文", "N639-曾意晴", "N645-賴妙貞", "N881-曾莉雯", "N994-林昱均", "M028-董祐慈", "M226-徐郁雯", "M296-吳佳玲", "M343-黃悅綺", "M510-陳建儒", "M536-張盈綺", "M637-劉佳豫", "M697-張文甄", "N054-陳思宇", "M701-蔡昀珊", "M775-劉芷凌", "M240-黃茗媐", "N047-劉芳柔", "2801-新人專用"];
     const dbKey = "8F_REPAIR_ITEMS_V2"; 
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwDVQVKTeCKcVA4l92EP9J6ekKl_JvoTrL2j-uYzB_zcneAFgh-BAmgXHczYRTfGlFv/exec"; 
@@ -200,6 +152,7 @@
         renderTable();
     }
 
+    // --- 核心修改：強化日期格式轉換 ---
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
@@ -212,7 +165,11 @@
         document.getElementById('page_title').innerText = `${y}年${m}月 請 修 登 記 表`;
 
         items.forEach((item, index) => {
-            if (!item.date.startsWith(filterMonth) && !item.isNew) return;
+            // 💡 修正日期：不管來源是 ISO (T16:00...) 還是斜線，統一轉為 YYYY-MM-DD
+            let safeDate = item.date ? item.date.substring(0, 10).replace(/\//g, '-') : "";
+            
+            // 如果日期不符合當前月份過濾，且不是新增項目，則不顯示
+            if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
             if (item.isNew) tr.className = "row-new";
@@ -227,7 +184,7 @@
             if(item.status === "已修待開單") statusClass = "status-applied";
 
             tr.innerHTML = `
-                <td class="${lockedClass}"><input type="date" value="${item.date}" onchange="updateItem(${index}, 'date', this.value)"></td>
+                <td class="${lockedClass}"><input type="date" value="${safeDate}" onchange="updateItem(${index}, 'date', this.value)"></td>
                 <td class="${lockedClass}"><input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)"></td>
                 <td class="${lockedClass}">
                     <select class="status-select ${orderClass}" onchange="updateItem(${index}, 'repairOrder', this.value)">
@@ -237,10 +194,10 @@
                 </td>
                 <td class="${lockedClass}">
                     <select class="status-select ${statusClass}" onchange="updateItem(${index}, 'status', this.value)">
-                        <option value="待處理" ${item.status==='待處理請修'?'selected':''}>待處理請修</option>
+                        <option value="待處理" ${item.status==='待處理' || item.status==='待處理請修' ?'selected':''}>待處理請修</option>
                         <option value="已請修待完成" ${item.status==='已請修待完成'?'selected':''}>已請修待完成</option>
-                        <option value="已完成" ${item.status==='已完成請修'?'selected':''}>已完成請修</option>
-                        <option value="已修待開單" ${item.status==='已處理開單'?'selected':''}>已處理待開單</option>
+                        <option value="已完成" ${item.status==='已完成' || item.status==='已完成請修' ?'selected':''}>已完成請修</option>
+                        <option value="已修待開單" ${item.status==='已修待開單' || item.status==='已處理開單' ?'selected':''}>已處理待開單</option>
                     </select>
                 </td>
                 <td>${item.stamp ? `<span class="stamp">${item.stamp.replace('-', '<br>')}</span>` : ''}</td>
@@ -253,7 +210,9 @@
 
     function addRow() { 
         const newId = "ID-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-        items.push({ date: new Date().toISOString().split('T')[0], name: "", repairOrder: "未開單", status: "待處理請修", stamp: "", note: "", isNew: true, id: newId }); 
+        // 新增時強制使用 10 位數 YYYY-MM-DD
+        const today = new Date().toISOString().split('T')[0];
+        items.push({ date: today, name: "", repairOrder: "未開單", status: "待處理請修", stamp: "", note: "", isNew: true, id: newId }); 
         renderTable(); 
     }
     
@@ -299,8 +258,13 @@
         try {
             const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
             const cloudData = await response.json();
-            if (Array.isArray(cloudData)) { items = cloudData; saveToLocal(); }
-        } catch (e) { items = JSON.parse(localStorage.getItem(dbKey)) || []; }
+            if (Array.isArray(cloudData)) { 
+                items = cloudData; 
+                saveToLocal(); 
+            }
+        } catch (e) { 
+            items = JSON.parse(localStorage.getItem(dbKey)) || []; 
+        }
         renderTable();
     }
     
@@ -309,16 +273,14 @@
         initUserList(); 
         loadFromCloud(); 
     };
-// 💡 提供給主頁面呼叫的檢查函數 (page2, page3 專用)
+
     function checkUnsaved() {
         if (typeof items !== 'undefined' && items.length > 0) {
-            // 只要有任何一筆資料是 isNew (新增且未存檔)，就回傳 true
             return items.some(item => item.isNew === true);
         }
         return false;
     }
 
-    // 保留瀏覽器原生關閉提醒
     window.onbeforeunload = function (e) {
         if (checkUnsaved()) {
             return "您有尚未儲存的變更。";
