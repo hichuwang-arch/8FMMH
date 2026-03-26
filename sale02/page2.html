@@ -244,16 +244,31 @@
 
     function updateItem(index, field, value) { 
         items[index][field] = value; 
+        
+        const today = new Date().toISOString().split('T')[0];
+        const originalNote = items[index]['note'] || "";
+
+        // 邏輯 1：選擇「已申請待回」
         if (field === 'status' && value === '已申請待回') {
-            const today = new Date().toISOString().split('T')[0];
             const applyDate = prompt("請輸入申請日期：", today);
             if (applyDate) {
-                const originalNote = items[index]['note'] || "";
                 if (!originalNote.includes("申請]")) {
                     items[index]['note'] = `[${applyDate} 申請] ` + originalNote;
                 }
             }
         }
+        
+        // 邏輯 2：選擇「已回」 (新增的部分)
+        else if (field === 'status' && value === '已回') {
+            const receiveDate = prompt("請輸入收到日期：", today);
+            if (receiveDate) {
+                // 如果備註裡還沒有 [日期 收到] 的字樣，就加上去
+                if (!originalNote.includes("申請用物已回]")) {
+                    items[index]['note'] = `[${receiveDate} 申請用物已回] ` + originalNote;
+                }
+            }
+        }
+
         renderTable(); 
     }
 
