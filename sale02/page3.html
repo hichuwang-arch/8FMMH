@@ -2,12 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>請修登記表</title>
     <style>
-        /* --- CSS 樣式保持不變 --- */
         @page { size: landscape; margin: 1cm; }
         body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f3f5; }
-        .page { background: white; width: 1150px; margin: auto; padding: 25px; border: 1px solid #ccc; position: relative; min-height: 700px; }
+        .page { background: white; width: 1150px; margin: auto; padding: 25px; border: 1px solid #ccc; position: relative; min-height: 700px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; font-size: 28px; letter-spacing: 8px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th, td { border: 1px solid black; padding: 6px 2px; text-align: center; height: 45px; vertical-align: middle; }
@@ -22,11 +22,9 @@
         input[type="date"], input[type="text"] { 
             width: 95%; border: none; outline: none; font-size: 14px; 
             text-align: center; background: transparent; color: black !important;
-            opacity: 1 !important; -webkit-text-fill-color: black !important;
         }
-        .cell-locked { cursor: not-allowed !important; }
-        .cell-locked input, .cell-locked select { pointer-events: none; cursor: not-allowed !important; }
-        .status-select { width: 95%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 13px; color: black !important; opacity: 1 !important; }
+        .cell-locked { cursor: not-allowed !important; background-color: #f9f9f9; }
+        .status-select { width: 95%; height: 32px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; text-align: center; font-size: 13px; color: black !important; }
         .order-none { background-color: #f5f5f5; color: #999; }
         .order-done { background-color: #fff7e6; color: #fa8c16; border-color: #ffd591; }
         .status-pending { background-color: #fff; color: #7f8c8d; }
@@ -37,19 +35,18 @@
         .stamp { display: inline-block; border: 2px solid #d63031; color: #d63031; font-family: "標楷體", serif; font-weight: bold; font-size: 12px; padding: 2px; border-radius: 4px; transform: rotate(-5deg); }
         .control-panel { background: #2c3e50; color: white; padding: 12px 20px; width: 1150px; margin: 0 auto 10px auto; border-radius: 8px; display: flex; gap: 15px; align-items: center; box-sizing: border-box; }
         select { height: 38px; font-size: 15px; border-radius: 5px; padding: 0 5px; }
-        .btn { padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; border: none; font-size: 14px; }
+        .btn { padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; border: none; font-size: 14px; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
         .btn-add { background: #27ae60; color: white; }
         .btn-stamp { background: #e67e22; color: white; }
         .btn-save { background: #f1c40f; color: #2c3e50; }
-        @media print { .control-panel, .col-del, #del_header { display: none !important; } body { background: white; padding: 0; } .page { border: none; width: 100%; padding: 0; margin: 0; } }
+        @media print { .control-panel, .col-del, #del_header, .workflow-box-small { display: none !important; } body { background: white; padding: 0; } .page { border: none; width: 100%; padding: 0; margin: 0; } }
         
-        /* 流程說明框樣式 */
         .workflow-box-small { margin: 10px auto; display: flex; justify-content: space-between; align-items: center; width: 95%; max-width: 600px; background: #fff; border: 1px dashed #3498db; border-radius: 8px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .workflow-step { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .step-num { display: inline-block; width: 18px; height: 18px; background: #3498db; color: white; border-radius: 50%; font-weight: bold; line-height: 18px; margin-bottom: 3px; font-size: 11px; }
         .step-text { display: block; font-size: 12px; font-weight: bold; color: #2c3e50; white-space: nowrap; }
-        .step-arrow { color: #bdc3c7; font-size: 14px; padding: 0 5px; margin-top: 20px; }
-        @media print { .workflow-box-small { display: none !important; } }
+        .step-arrow { color: #bdc3c7; font-size: 14px; padding: 0 5px; }
     </style>
 </head>
 <body>
@@ -88,26 +85,14 @@
         <tbody id="tableBody"></tbody>
     </table>
 
-    <div class="workflow-box-small no-print">
-        <div class="workflow-step">
-            <span class="step-num">1</span>
-            <span class="step-text">選執行人</span>
-        </div>
+    <div class="workflow-box-small">
+        <div class="workflow-step"><span class="step-num">1</span><span class="step-text">選執行人</span></div>
         <div class="step-arrow">➔</div>
-        <div class="workflow-step">
-            <span class="step-num">2</span>
-            <span class="step-text">點選新增項目填寫</span>
-        </div>
+        <div class="workflow-step"><span class="step-num">2</span><span class="step-text">新增填寫</span></div>
         <div class="step-arrow">➔</div>
-        <div class="workflow-step">
-            <span class="step-num">3</span>
-            <span class="step-text">填寫完請記得按存檔簽章</span>
-        </div>
+        <div class="workflow-step"><span class="step-num">3</span><span class="step-text">存檔簽章</span></div>
         <div class="step-arrow">➔</div>
-        <div class="workflow-step">
-            <span class="step-num">4</span>
-            <span class="step-text">有跳出存檔成功畫面就代表你成功了</span>
-        </div>
+        <div class="workflow-step"><span class="step-num">4</span><span class="step-text">同步成功</span></div>
     </div>
 </div>
 
@@ -120,17 +105,15 @@
 
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
-        const displayCount = 6; 
         const now = new Date();
         select.innerHTML = "";
-        for (let i = 0; i < displayCount; i++) {
+        for (let i = 0; i < 6; i++) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
             if (d.getFullYear() < 2026 || (d.getFullYear() === 2026 && d.getMonth() + 1 < 3)) break;
             const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             const text = `${d.getFullYear()}年 ${d.getMonth() + 1}月`;
             select.add(new Option(text, val));
         }
-        select.selectedIndex = 0;
     }
 
     function initUserList() {
@@ -152,7 +135,6 @@
         renderTable();
     }
 
-    // --- 核心修改：強化日期格式轉換 ---
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
@@ -165,10 +147,8 @@
         document.getElementById('page_title').innerText = `${y}年${m}月 請 修 登 記 表`;
 
         items.forEach((item, index) => {
-            // 💡 修正日期：不管來源是 ISO (T16:00...) 還是斜線，統一轉為 YYYY-MM-DD
+            // 💡 強化日期格式相容性
             let safeDate = item.date ? item.date.substring(0, 10).replace(/\//g, '-') : "";
-            
-            // 如果日期不符合當前月份過濾，且不是新增項目，則不顯示
             if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
@@ -180,8 +160,8 @@
             let orderClass = item.repairOrder === "已開單" ? "order-done" : "order-none";
             let statusClass = "status-pending";
             if(item.status === "已請修待完成") statusClass = "status-repairing";
-            if(item.status === "已完成") statusClass = "status-done";
-            if(item.status === "已修待開單") statusClass = "status-applied";
+            else if(item.status === "已完成" || item.status === "已完成請修") statusClass = "status-done";
+            else if(item.status === "已修待開單" || item.status === "已處理待開單") statusClass = "status-applied";
 
             tr.innerHTML = `
                 <td class="${lockedClass}"><input type="date" value="${safeDate}" onchange="updateItem(${index}, 'date', this.value)"></td>
@@ -194,10 +174,10 @@
                 </td>
                 <td class="${lockedClass}">
                     <select class="status-select ${statusClass}" onchange="updateItem(${index}, 'status', this.value)">
-                        <option value="待處理" ${item.status==='待處理' || item.status==='待處理請修' ?'selected':''}>待處理請修</option>
+                        <option value="待處理請修" ${item.status.includes('待處理')?'selected':''}>待處理請修</option>
                         <option value="已請修待完成" ${item.status==='已請修待完成'?'selected':''}>已請修待完成</option>
-                        <option value="已完成" ${item.status==='已完成' || item.status==='已完成請修' ?'selected':''}>已完成請修</option>
-                        <option value="已修待開單" ${item.status==='已修待開單' || item.status==='已處理開單' ?'selected':''}>已處理待開單</option>
+                        <option value="已完成請修" ${item.status.includes('已完成')?'selected':''}>已完成請修</option>
+                        <option value="已處理待開單" ${item.status.includes('待開單')?'selected':''}>已處理待開單</option>
                     </select>
                 </td>
                 <td>${item.stamp ? `<span class="stamp">${item.stamp.replace('-', '<br>')}</span>` : ''}</td>
@@ -209,18 +189,20 @@
     }
 
     function addRow() { 
-        const newId = "ID-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-        // 新增時強制使用 10 位數 YYYY-MM-DD
-        const today = new Date().toISOString().split('T')[0];
-        items.push({ date: today, name: "", repairOrder: "未開單", status: "待處理請修", stamp: "", note: "", isNew: true, id: newId }); 
+        const newId = "ID-" + Date.now();
+        // 💡 修正日期偏移問題：改用本地日期擷取
+        const now = new Date();
+        const localToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+        items.push({ date: localToday, name: "", repairOrder: "未開單", status: "待處理請修", stamp: "", note: "", isNew: true, id: newId }); 
         renderTable(); 
     }
-    
+
     function updateItem(index, field, value) { 
         items[index][field] = value; 
         if (field === 'repairOrder' && value === '已開單') {
             const orderNum = prompt("請輸入請修單號：");
-            if (orderNum && orderNum.trim() !== "") {
+            if (orderNum) {
                 const originalNote = items[index]['note'] || "";
                 if (!originalNote.includes("單號:")) {
                     items[index]['note'] = `[單號:${orderNum}] ` + originalNote;
@@ -228,32 +210,38 @@
                 items[index]['status'] = '已請修待完成';
             } else {
                 items[index]['repairOrder'] = '未開單';
-                alert("未輸入單號，狀態已回復為未開單。");
+                alert("未輸入單號，狀態已回覆。");
             }
         }
         renderTable(); 
     }
 
     async function deleteRow(index) { 
-        if(confirm("確定刪除此筆資料？")) { 
+        if(confirm("確定刪除？")) { 
             items.splice(index, 1); saveToLocal(); renderTable(); await syncToCloud();
         } 
     }
+
     async function stampAllAndSave() {
         const user = document.getElementById('user_select').value;
         if(!user) return alert("請選擇執行人！");
-        let count = 0;
-        items.forEach(item => { if(item.name && !item.stamp) { item.stamp = user; item.isNew = false; count++; } });
-        saveToLocal(); renderTable(); await syncToCloud(); alert(count > 0 ? `已完成 ${count} 項簽章並同步至雲端！` : "同步完成！");
+        items.forEach(item => { if(item.name && !item.stamp) { item.stamp = user; item.isNew = false; } });
+        saveToLocal(); renderTable(); await syncToCloud(); alert("簽章與同步完成！");
     }
+
     async function manualSave() { 
         items.forEach(item => { item.isNew = false; if(!item.id) item.id = "ID-" + Date.now(); });
-        saveToLocal(); renderTable(); await syncToCloud(); alert("資料已儲存！"); 
+        saveToLocal(); renderTable(); await syncToCloud(); alert("存檔完成！"); 
     }
+
     function saveToLocal() { localStorage.setItem(dbKey, JSON.stringify(items)); }
+
     async function syncToCloud() {
-        try { await fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(items) }); } catch (e) { console.error("雲端同步失敗", e); }
+        try { 
+            await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); 
+        } catch (e) { console.error("同步失敗", e); }
     }
+
     async function loadFromCloud() {
         try {
             const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
@@ -267,24 +255,11 @@
         }
         renderTable();
     }
-    
+
     window.onload = () => { 
         initMonthFilter();
         initUserList(); 
         loadFromCloud(); 
-    };
-
-    function checkUnsaved() {
-        if (typeof items !== 'undefined' && items.length > 0) {
-            return items.some(item => item.isNew === true);
-        }
-        return false;
-    }
-
-    window.onbeforeunload = function (e) {
-        if (checkUnsaved()) {
-            return "您有尚未儲存的變更。";
-        }
     };
 </script>
 </body>
