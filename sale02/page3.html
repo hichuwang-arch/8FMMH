@@ -42,6 +42,7 @@
         .btn-save { background: #f1c40f; color: #2c3e50; }
         @media print { .control-panel, .col-del, #del_header, .workflow-box-small { display: none !important; } body { background: white; padding: 0; } .page { border: none; width: 100%; padding: 0; margin: 0; } }
         
+        /* 統一流程圖樣式 */
         .workflow-box-small { margin: 10px auto; display: flex; justify-content: space-between; align-items: center; width: 95%; max-width: 600px; background: #fff; border: 1px dashed #3498db; border-radius: 8px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .workflow-step { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .step-num { display: inline-block; width: 18px; height: 18px; background: #3498db; color: white; border-radius: 50%; font-weight: bold; line-height: 18px; margin-bottom: 3px; font-size: 11px; }
@@ -85,7 +86,7 @@
         <tbody id="tableBody"></tbody>
     </table>
 
-   <div class="workflow-box-small no-print">
+    <div class="workflow-box-small no-print">
         <div class="workflow-step"><span class="step-num">1</span><span class="step-text">請選執行人</span></div>
         <div class="step-arrow">➔</div>
         <div class="workflow-step"><span class="step-num">2</span><span class="step-text">點選新增項目填寫</span></div>
@@ -147,16 +148,11 @@
         document.getElementById('page_title').innerText = `${y}年${m}月 請 修 登 記 表`;
 
         items.forEach((item, index) => {
-            // 💡 強化日期格式化：處理 T/Z 偏移問題
             let safeDate = "";
             if (item.date) {
                 if (item.date.includes('T')) {
-                    // 如果是 ISO 格式，轉換為在地日期物件再取值
                     const d = new Date(item.date);
-                    const dy = d.getFullYear();
-                    const dm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    safeDate = `${dy}-${dm}-${dd}`;
+                    safeDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 } else {
                     safeDate = item.date.substring(0, 10).replace(/\//g, '-');
                 }
@@ -173,8 +169,8 @@
             let orderClass = item.repairOrder === "已開單" ? "order-done" : "order-none";
             let statusClass = "status-pending";
             if(item.status === "已請修待完成") statusClass = "status-repairing";
-            else if(item.status === "已完成" || item.status === "已完成請修") statusClass = "status-done";
-            else if(item.status === "已處理待開單" || item.status === "已處理待開單") statusClass = "status-applied";
+            else if(item.status.includes("已完成")) statusClass = "status-done";
+            else if(item.status.includes("待開單")) statusClass = "status-applied";
 
             tr.innerHTML = `
                 <td class="${lockedClass}"><input type="date" value="${safeDate}" onchange="updateItem(${index}, 'date', this.value)"></td>
@@ -204,21 +200,9 @@
     function addRow() { 
         const newId = "ID-" + Date.now();
         const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        const localToday = `${y}-${m}-${d}`;
+        const localToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-        items.push({ 
-            date: localToday, 
-            name: "", 
-            repairOrder: "未開單", 
-            status: "待處理請修", 
-            stamp: "", 
-            note: "", 
-            isNew: true, 
-            id: newId 
-        }); 
+        items.push({ date: localToday, name: "", repairOrder: "未開單", status: "待處理請修", stamp: "", note: "", isNew: true, id: newId }); 
         renderTable(); 
     }
 
@@ -228,9 +212,7 @@
             const orderNum = prompt("請輸入請修單號：");
             if (orderNum) {
                 const originalNote = items[index]['note'] || "";
-                if (!originalNote.includes("單號:")) {
-                    items[index]['note'] = `[單號:${orderNum}] ` + originalNote;
-                }
+                if (!originalNote.includes("單號:")) items[index]['note'] = `[單號:${orderNum}] ` + originalNote;
                 items[index]['status'] = '已請修待完成';
             } else {
                 items[index]['repairOrder'] = '未開單';
@@ -261,34 +243,26 @@
     function saveToLocal() { localStorage.setItem(dbKey, JSON.stringify(items)); }
 
     async function syncToCloud() {
-        try { 
-            await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); 
-        } catch (e) { console.error("同步失敗", e); }
+        try { await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch (e) {}
     }
 
     async function loadFromCloud() {
-    try {
-        const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
-        const cloudData = await response.json();
-        if (Array.isArray(cloudData)) { 
-            // 💡 這裡加上這行，確保日期格式正確轉換
-            items = cloudData.map(item => {
-                if (item.date && item.date.includes('T')) {
-                    const d = new Date(item.date);
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    item.date = `${y}-${m}-${day}`;
-                }
-                return item;
-            });
-            saveToLocal(); // 更新本地儲存
-        }
-    } catch (e) { 
-        items = JSON.parse(localStorage.getItem(dbKey)) || []; 
+        try {
+            const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
+            const cloudData = await response.json();
+            if (Array.isArray(cloudData)) { 
+                items = cloudData.map(item => {
+                    if (item.date && item.date.includes('T')) {
+                        const d = new Date(item.date);
+                        item.date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    }
+                    return item;
+                });
+                saveToLocal();
+            }
+        } catch (e) { items = JSON.parse(localStorage.getItem(dbKey)) || []; }
+        renderTable();
     }
-    renderTable();
-}
 
     window.onload = () => { 
         initMonthFilter();
