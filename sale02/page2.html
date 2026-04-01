@@ -40,6 +40,12 @@
         .btn-stamp { background: #e67e22; color: white; }
         .btn-save { background: #f1c40f; color: #2c3e50; }
         @media print { .control-panel, .col-del, #del_header { display: none !important; } .page { border: none; width: 100%; } }
+        
+        .workflow-box-small { margin: 10px auto; display: flex; justify-content: space-between; align-items: center; width: 95%; max-width: 600px; background: #fff; border: 1px dashed #3498db; border-radius: 8px; padding: 8px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .workflow-step { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .step-num { display: inline-block; width: 18px; height: 18px; background: #3498db; color: white; border-radius: 50%; font-weight: bold; line-height: 18px; margin-bottom: 3px; font-size: 11px; }
+        .step-text { display: block; font-size: 12px; font-weight: bold; color: #2c3e50; white-space: nowrap; }
+        .step-arrow { color: #bdc3c7; font-size: 14px; padding: 0 5px; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -49,12 +55,10 @@
         <span style="font-weight:bold;">👤 執行人：</span>
         <select id="user_select" onchange="handleUserChange()"></select>
     </div>
-    
     <div style="margin-left: 20px;">
         <span style="font-weight:bold;">📅 顯示月份：</span>
         <select id="filter_month" onchange="renderTable()"></select>
     </div>
-
     <div style="margin-left: auto; display: flex; gap: 8px;">
         <button class="btn btn-add" onclick="addRow()">➕ 新增項目</button>
         <button class="btn btn-stamp" onclick="stampAllAndSave()">🏮 存檔簽章</button>
@@ -78,77 +82,16 @@
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
-<style>
-    /* 💡 原本格式的「縮小版」 */
-    .workflow-box-small {
-        margin: 10px auto; /* 減少上下間距 */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 95%;
-        max-width: 600px; /* 寬度縮小，避免在寬螢幕拉太長 */
-        background: #fff;
-        border: 1px dashed #3498db; /* 邊框變細 */
-        border-radius: 8px;
-        padding: 8px 12px; /* 內距縮小 */
-        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
-    .workflow-step {
-        flex: 1;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .step-num {
-        display: inline-block;
-        width: 18px;  /* 圓圈從 24px 縮小到 18px */
-        height: 18px;
-        background: #3498db;
-        color: white;
-        border-radius: 50%;
-        font-weight: bold;
-        line-height: 18px;
-        margin-bottom: 3px;
-        font-size: 11px; /* 數字縮小 */
-    }
-    .step-text {
-        display: block;
-        font-size: 12px; /* 文字從 14px 縮小到 12px */
-        font-weight: bold;
-        color: #2c3e50;
-        white-space: nowrap;
-    }
-    .step-arrow {
-        color: #bdc3c7;
-        font-size: 14px; /* 箭頭縮小 */
-        padding: 0 5px;
-        margin-top: 20px; /* 讓箭頭對齊文字高度 */
-    }
-    @media print { .workflow-box-small { display: none !important; } }
-</style>
 
-<div class="workflow-box-small no-print">
-    <div class="workflow-step">
-        <span class="step-num">1</span>
-        <span class="step-text">請選執行人</span>
+    <div class="workflow-box-small no-print">
+        <div class="workflow-step"><span class="step-num">1</span><span class="step-text">請選執行人</span></div>
+        <div class="step-arrow">➔</div>
+        <div class="workflow-step"><span class="step-num">2</span><span class="step-text">點選新增項目填寫</span></div>
+        <div class="step-arrow">➔</div>
+        <div class="workflow-step"><span class="step-num">3</span><span class="step-text">填寫完請按存檔簽章</span></div>
+        <div class="step-arrow">➔</div>
+        <div class="workflow-step"><span class="step-num">4</span><span class="step-text">有存檔成功畫面即成功</span></div>
     </div>
-    <div class="step-arrow">➔</div>
-    <div class="workflow-step">
-        <span class="step-num">2</span>
-        <span class="step-text">點選新增項目填寫</span>
-    </div>
-    <div class="step-arrow">➔</div>
-    <div class="workflow-step">
-        <span class="step-num">3</span>
-        <span class="step-text">填寫完請按存檔簽章</span>
-    </div>
-    <div class="step-arrow">➔</div>
-    <div class="workflow-step">
-        <span class="step-num">4</span>
-        <span class="step-text">有跳出存檔成功畫面就代表你成功了</span>
-    </div>
-</div>
 </div>
 
 <script>
@@ -160,17 +103,14 @@
 
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
-        const displayCount = 6; 
         const now = new Date();
         select.innerHTML = "";
-        for (let i = 0; i < displayCount; i++) {
+        for (let i = 0; i < 6; i++) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
             if (d.getFullYear() < 2026 || (d.getFullYear() === 2026 && d.getMonth() + 1 < 3)) break;
             const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            const text = `${d.getFullYear()}年 ${d.getMonth() + 1}月`;
-            select.add(new Option(text, val));
+            select.add(new Option(`${d.getFullYear()}年 ${d.getMonth() + 1}月`, val));
         }
-        select.selectedIndex = 0;
     }
 
     function initUserList() {
@@ -204,7 +144,21 @@
         document.getElementById('page_title').innerText = `${y}年${m}月 缺 物 登 記 表`;
 
         items.forEach((item, index) => {
-            if (!item.date.startsWith(filterMonth) && !item.isNew) return;
+            // 💡 修正日期偏移解析
+            let safeDate = "";
+            if (item.date) {
+                if (item.date.includes('T')) {
+                    const d = new Date(item.date);
+                    const dy = d.getFullYear();
+                    const dm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    safeDate = `${dy}-${dm}-${dd}`;
+                } else {
+                    safeDate = item.date.substring(0, 10).replace(/\//g, '-');
+                }
+            }
+
+            if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
             if (item.isNew) tr.className = "row-new";
@@ -212,13 +166,12 @@
             const lockedClass = canEdit ? "" : "cell-locked"; 
 
             let sClass = "status-default";
-            if(item.status === "已申請") sClass = "status-applied";
-            if(item.status === "已回") sClass = "status-received";
-            if(item.status === "待回") sClass = "status-waiting";
-            if(item.status === "缺貨中") sClass = "status-oos";
+            if(item.status === "已申請待回") sClass = "status-applied";
+            else if(item.status === "已回") sClass = "status-received";
+            else if(item.status === "缺貨中") sClass = "status-oos";
 
             tr.innerHTML = `
-                <td class="${lockedClass}"><input type="date" value="${item.date}" onchange="updateItem(${index}, 'date', this.value)"></td>
+                <td class="${lockedClass}"><input type="date" value="${safeDate}" onchange="updateItem(${index}, 'date', this.value)"></td>
                 <td class="${lockedClass}"><input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)"></td>
                 <td class="${lockedClass}">
                     <select class="status-select ${sClass}" onchange="updateItem(${index}, 'status', this.value)">
@@ -237,38 +190,28 @@
     }
 
     function addRow() { 
-        const newId = Date.now() + Math.random().toString(36).substr(2, 9);
-        items.push({ date: new Date().toISOString().split('T')[0], name: "", status: "未處理", stamp: "", note: "", isNew: true, id: newId }); 
+        const now = new Date();
+        const localToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        items.push({ date: localToday, name: "", status: "未處理", stamp: "", note: "", isNew: true, id: "ID-" + Date.now() }); 
         renderTable(); 
     }
 
     function updateItem(index, field, value) { 
         items[index][field] = value; 
-        
-        const today = new Date().toISOString().split('T')[0];
-        const originalNote = items[index]['note'] || "";
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-        // 邏輯 1：選擇「已申請待回」
         if (field === 'status' && value === '已申請待回') {
             const applyDate = prompt("請輸入申請日期：", today);
-            if (applyDate) {
-                if (!originalNote.includes("申請]")) {
-                    items[index]['note'] = `[${applyDate} 申請] ` + originalNote;
-                }
+            if (applyDate && !(items[index].note || "").includes("申請]")) {
+                items[index].note = `[${applyDate} 申請] ` + (items[index].note || "");
             }
-        }
-        
-        // 邏輯 2：選擇「已回」 (新增的部分)
-        else if (field === 'status' && value === '已回') {
+        } else if (field === 'status' && value === '已回') {
             const receiveDate = prompt("請輸入收到日期：", today);
-            if (receiveDate) {
-                // 如果備註裡還沒有 [日期 收到] 的字樣，就加上去
-                if (!originalNote.includes("申請用物已回]")) {
-                    items[index]['note'] = `[${receiveDate} 申請用物已回] ` + originalNote;
-                }
+            if (receiveDate && !(items[index].note || "").includes("已回]")) {
+                items[index].note = `[${receiveDate} 申請用物已回] ` + (items[index].note || "");
             }
         }
-
         renderTable(); 
     }
 
@@ -282,7 +225,7 @@
     }
 
     async function manualSave() { 
-        items.forEach(item => { item.isNew = false; if(!item.id) item.id = Date.now() + Math.random().toString(36).substr(2, 9); });
+        items.forEach(item => { item.isNew = false; if(!item.id) item.id = "ID-" + Date.now(); });
         saveToLocal(); await syncToCloud(); renderTable();
         alert("所有修改已同步至雲端！"); 
     }
@@ -299,42 +242,37 @@
     }
     async function loadFromCloud() {
         try {
-            const response = await fetch(GAS_URL);
+            const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
             const cloudData = await response.json();
-            items = cloudData || []; saveToLocal();
+            if (Array.isArray(cloudData)) {
+                // 💡 載入時清理日期格式
+                items = cloudData.map(item => {
+                    if (item.date && item.date.includes('T')) {
+                        const d = new Date(item.date);
+                        const dy = d.getFullYear();
+                        const dm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        item.date = `${dy}-${dm}-${dd}`;
+                    }
+                    return item;
+                });
+                saveToLocal();
+            }
         } catch (e) { items = JSON.parse(localStorage.getItem(dbKey)) || []; }
         renderTable();
     }
-    
-    // 💡 離開提醒邏輯：檢查是否有 isNew 項目 (尚未存檔的內容)
-    window.onbeforeunload = function (e) {
-        const hasUnsavedChanges = items.some(item => item.isNew);
-        if (hasUnsavedChanges) {
-            const message = "您有尚未存檔的項目，確定要離開嗎？";
-            e.returnValue = message; // 標準寫法
-            return message; // 部分舊瀏覽器寫法
-        }
-    };
 
     window.onload = () => { 
         initMonthFilter();
         initUserList(); 
         loadFromCloud(); 
-    };// 💡 提供給主頁面呼叫的檢查函數 (page2, page3 專用)
-    function checkUnsaved() {
-        if (typeof items !== 'undefined' && items.length > 0) {
-            // 只要有任何一筆資料是 isNew (新增且未存檔)，就回傳 true
-            return items.some(item => item.isNew === true);
-        }
-        return false;
-    }
-
-    // 保留瀏覽器原生關閉提醒
-    window.onbeforeunload = function (e) {
-        if (checkUnsaved()) {
-            return "您有尚未儲存的變更。";
-        }
     };
+
+    function closeTable() {
+        if (items.some(i => i.isNew) && !confirm("您有尚未存檔的項目，確定要離開嗎？")) return;
+        if (window.parent && typeof window.parent.goHome === 'function') window.parent.goHome();
+        else window.location.href = "menu.html";
+    }
 </script>
 </body>
 </html>
