@@ -267,18 +267,28 @@
     }
 
     async function loadFromCloud() {
-        try {
-            const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
-            const cloudData = await response.json();
-            if (Array.isArray(cloudData)) { 
-                items = cloudData; 
-                saveToLocal(); 
-            }
-        } catch (e) { 
-            items = JSON.parse(localStorage.getItem(dbKey)) || []; 
+    try {
+        const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
+        const cloudData = await response.json();
+        if (Array.isArray(cloudData)) { 
+            // 💡 這裡加上這行，確保日期格式正確轉換
+            items = cloudData.map(item => {
+                if (item.date && item.date.includes('T')) {
+                    const d = new Date(item.date);
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    item.date = `${y}-${m}-${day}`;
+                }
+                return item;
+            });
+            saveToLocal(); // 更新本地儲存
         }
-        renderTable();
+    } catch (e) { 
+        items = JSON.parse(localStorage.getItem(dbKey)) || []; 
     }
+    renderTable();
+}
 
     window.onload = () => { 
         initMonthFilter();
