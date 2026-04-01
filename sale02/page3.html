@@ -147,8 +147,21 @@
         document.getElementById('page_title').innerText = `${y}年${m}月 請 修 登 記 表`;
 
         items.forEach((item, index) => {
-            // 💡 強化日期格式相容性
-            let safeDate = item.date ? item.date.substring(0, 10).replace(/\//g, '-') : "";
+            // 💡 強化日期格式化：處理 T/Z 偏移問題
+            let safeDate = "";
+            if (item.date) {
+                if (item.date.includes('T')) {
+                    // 如果是 ISO 格式，轉換為在地日期物件再取值
+                    const d = new Date(item.date);
+                    const dy = d.getFullYear();
+                    const dm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    safeDate = `${dy}-${dm}-${dd}`;
+                } else {
+                    safeDate = item.date.substring(0, 10).replace(/\//g, '-');
+                }
+            }
+
             if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
@@ -161,7 +174,7 @@
             let statusClass = "status-pending";
             if(item.status === "已請修待完成") statusClass = "status-repairing";
             else if(item.status === "已完成" || item.status === "已完成請修") statusClass = "status-done";
-            else if(item.status === "已修待開單" || item.status === "已處理待開單") statusClass = "status-applied";
+            else if(item.status === "已處理待開單" || item.status === "已處理待開單") statusClass = "status-applied";
 
             tr.innerHTML = `
                 <td class="${lockedClass}"><input type="date" value="${safeDate}" onchange="updateItem(${index}, 'date', this.value)"></td>
@@ -188,17 +201,14 @@
         });
     }
 
-   function addRow() { 
+    function addRow() { 
         const newId = "ID-" + Date.now();
-        
-        // 💡 修正日期偏移：使用本地時間組合成 YYYY-MM-DD
         const now = new Date();
         const y = now.getFullYear();
         const m = String(now.getMonth() + 1).padStart(2, '0');
         const d = String(now.getDate()).padStart(2, '0');
         const localToday = `${y}-${m}-${d}`;
 
-        // 確保新資料使用本地日期
         items.push({ 
             date: localToday, 
             name: "", 
