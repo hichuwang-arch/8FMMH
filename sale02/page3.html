@@ -188,13 +188,27 @@
         });
     }
 
-    function addRow() { 
+   function addRow() { 
         const newId = "ID-" + Date.now();
-        // 💡 修正日期偏移問題：改用本地日期擷取
+        
+        // 💡 修正日期偏移：使用本地時間組合成 YYYY-MM-DD
         const now = new Date();
-        const localToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const localToday = `${y}-${m}-${d}`;
 
-        items.push({ date: localToday, name: "", repairOrder: "未開單", status: "待處理請修", stamp: "", note: "", isNew: true, id: newId }); 
+        // 確保新資料使用本地日期
+        items.push({ 
+            date: localToday, 
+            name: "", 
+            repairOrder: "未開單", 
+            status: "待處理請修", 
+            stamp: "", 
+            note: "", 
+            isNew: true, 
+            id: newId 
+        }); 
         renderTable(); 
     }
 
