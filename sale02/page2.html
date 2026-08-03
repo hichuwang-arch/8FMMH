@@ -57,6 +57,7 @@
     </div>
     <div style="margin-left: 20px;">
         <span style="font-weight:bold;">📅 顯示月份：</span>
+        <!-- 🚀 切換月份時直接在前端極速重新渲染表格 -->
         <select id="filter_month" onchange="renderTable()"></select>
     </div>
     <div style="margin-left: auto; display: flex; gap: 8px;">
@@ -98,7 +99,7 @@
     const staffList = ["3632-林咨璇", "M820-李筱薇", "M599-賴玉玫", "M944-謝家榆", "M956-林詩涵", "M976-林芝妘", "N007-陳郁婷", "E578-王淑娟", "M798-吳依蓁", "N513-葉懿嬋", "N530-龍家文", "N639-曾意晴",  "N881-曾莉雯", "N994-林昱均", "M028-董祐慈", "M226-徐郁雯", "M296-吳佳玲", "M343-黃悅綺", "M510-陳建儒", "M536-張盈綺", "M637-劉佳豫", "M697-張文甄", "N054-陳思宇", "M240-黃茗媐", "N047-劉芳柔", "2801-新人專用"];
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyve4I9dSxGnig8z9pOzXwMaYewGuTuLFn71tEo3dmMYazW4hT57QEk5apakJg4WEF1AA/exec"; 
 
-    let allItems = []; // 存放雲端拉回來的所有歷史資料
+    let allItems = []; // 存放試算表傳回的完整全量資料
 
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
@@ -108,7 +109,7 @@
             const [y, mm] = m.split('-');
             select.add(new Option(`${y}年 ${parseInt(mm)}月`, m));
         });
-        select.value = "2026-08";
+        select.value = "2026-08"; // 預設顯示 8 月
     }
 
     function initUserList() {
@@ -141,11 +142,10 @@
         const [y, m] = filterMonth.split('-');
         document.getElementById('page_title').innerText = `${y}年${parseInt(m)}月 缺 物 登 記 表`;
 
-        // 在前端記憶體秒速篩選選中的月份
         allItems.forEach((item, index) => {
             let safeDate = item.date ? String(item.date).substring(0, 10).replace(/\//g, '-') : "";
-            
-            // 如果不符合選取月份且不是剛新增的項目，就跳過隱藏
+
+            // 🚀 前端 0 延遲過濾：只有符合選定月份或是剛新增的項目才顯示出來
             if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
@@ -235,14 +235,19 @@
         } catch (e) { alert("雲端同步失敗"); }
     }
 
-    // 開啟網頁時一次抓回「工作表2」的所有資料
+    // 🚀 核心：載入「工作表2」的所有全量歷史資料
     async function loadFromCloud() {
         try {
             const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
             const cloudData = await response.json();
-            allItems = Array.isArray(cloudData) ? cloudData : [];
-        } catch (e) {
-            allItems = [];
+            if (Array.isArray(cloudData)) {
+                allItems = cloudData;
+            } else {
+                allItems = [];
+            }
+        } catch (e) { 
+            console.error(e);
+            allItems = []; 
         }
         renderTable();
     }
@@ -252,6 +257,12 @@
         initUserList(); 
         loadFromCloud(); 
     };
+
+    function closeTable() {
+        if (allItems.some(i => i.isNew) && !confirm("您有尚未存檔的項目，確定要離開嗎？")) return;
+        if (window.parent && typeof window.parent.goHome === 'function') window.parent.goHome();
+        else window.location.href = "menu.html";
+    }
 </script>
 </body>
 </html>
