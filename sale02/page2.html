@@ -96,19 +96,21 @@
 
 <script>
     const staffList = ["3632-林咨璇", "M820-李筱薇", "M599-賴玉玫", "M944-謝家榆", "M956-林詩涵", "M976-林芝妘", "N007-陳郁婷", "E578-王淑娟", "M798-吳依蓁", "N513-葉懿嬋", "N530-龍家文", "N639-曾意晴",  "N881-曾莉雯", "N994-林昱均", "M028-董祐慈", "M226-徐郁雯", "M296-吳佳玲", "M343-黃悅綺", "M510-陳建儒", "M536-張盈綺", "M637-劉佳豫", "M697-張文甄", "N054-陳思宇", "M240-黃茗媐", "N047-劉芳柔", "2801-新人專用"];
+    const dbKey = "8F_MISSING_ITEMS_V16"; 
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyve4I9dSxGnig8z9pOzXwMaYewGuTuLFn71tEo3dmMYazW4hT57QEk5apakJg4WEF1AA/exec"; 
 
-    let allItems = [];
+    let items = [];
 
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
+        const now = new Date();
         select.innerHTML = "";
-        const months = ["2026-08", "2026-07", "2026-06", "2026-05", "2026-04", "2026-03"];
-        months.forEach(m => {
-            const [y, mm] = m.split('-');
-            select.add(new Option(`${y}年 ${parseInt(mm)}月`, m));
-        });
-        select.value = "2026-08";
+        for (let i = 0; i < 6; i++) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            if (d.getFullYear() < 2026 || (d.getFullYear() === 2026 && d.getMonth() + 1 < 3)) break;
+            const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            select.add(new Option(`${d.getFullYear()}年 ${d.getMonth() + 1}月`, val));
+        }
     }
 
     function initUserList() {
@@ -134,15 +136,27 @@
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
         const user = document.getElementById('user_select').value;
-        const filterMonth = document.getElementById('filter_month').value || "2026-08";
+        const filterMonth = document.getElementById('filter_month').value;
         const isAdmin = ["N047", "M240", "E578"].some(p => user.startsWith(p));
         document.getElementById('del_header').style.display = isAdmin ? "table-cell" : "none";
 
         const [y, m] = filterMonth.split('-');
-        document.getElementById('page_title').innerText = `${y}年${parseInt(m)}月 缺 物 登 記 表`;
+        document.getElementById('page_title').innerText = `${y}年${m}月 缺 物 登 記 表`;
 
-        allItems.forEach((item, index) => {
-            let safeDate = item.date ? String(item.date).substring(0, 10).replace(/\//g, '-') : "";
+        items.forEach((item, index) => {
+            // 💡 修正日期偏移解析
+            let safeDate = "";
+            if (item.date) {
+                if (item.date.includes('T')) {
+                    const d = new Date(item.date);
+                    const dy = d.getFullYear();
+                    const dm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    safeDate = `${dy}-${dm}-${dd}`;
+                } else {
+                    safeDate = item.date.substring(0, 10).replace(/\//g, '-');
+                }
+            }
 
             if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
@@ -158,7 +172,7 @@
 
             tr.innerHTML = `
                 <td class="${lockedClass}"><input type="date" value="${safeDate}" onchange="updateItem(${index}, 'date', this.value)"></td>
-                <td class="${lockedClass}"><input type="text" value="${item.name || ''}" onchange="updateItem(${index}, 'name', this.value)"></td>
+                <td class="${lockedClass}"><input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)"></td>
                 <td class="${lockedClass}">
                     <select class="status-select ${sClass}" onchange="updateItem(${index}, 'status', this.value)">
                         <option value="未處理" ${item.status==='未處理'?'selected':''}>未處理</option>
@@ -176,29 +190,26 @@
     }
 
     function addRow() { 
-        const filterMonth = document.getElementById('filter_month').value || "2026-08";
         const now = new Date();
-        const dd = String(now.getDate()).padStart(2, '0');
-        const defaultDate = `${filterMonth}-${dd}`;
-        
-        allItems.push({ date: defaultDate, name: "", status: "未處理", stamp: "", note: "", isNew: true, id: "ID-" + Date.now() }); 
+        const localToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        items.push({ date: localToday, name: "", status: "未處理", stamp: "", note: "", isNew: true, id: "ID-" + Date.now() }); 
         renderTable(); 
     }
 
     function updateItem(index, field, value) { 
-        allItems[index][field] = value; 
+        items[index][field] = value; 
         const now = new Date();
         const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
         if (field === 'status' && value === '已申請待回') {
             const applyDate = prompt("請輸入申請日期：", today);
-            if (applyDate && !(allItems[index].note || "").includes("申請]")) {
-                allItems[index].note = `[${applyDate} 申請] ` + (allItems[index].note || "");
+            if (applyDate && !(items[index].note || "").includes("申請]")) {
+                items[index].note = `[${applyDate} 申請] ` + (items[index].note || "");
             }
         } else if (field === 'status' && value === '已回') {
             const receiveDate = prompt("請輸入收到日期：", today);
-            if (receiveDate && !(allItems[index].note || "").includes("已回]")) {
-                allItems[index].note = `[${receiveDate} 申請用物已回] ` + (allItems[index].note || "");
+            if (receiveDate && !(items[index].note || "").includes("已回]")) {
+                items[index].note = `[${receiveDate} 申請用物已回] ` + (items[index].note || "");
             }
         }
         renderTable(); 
@@ -208,43 +219,46 @@
         const user = document.getElementById('user_select').value;
         if(!user) return alert("請先選擇執行人！");
         let count = 0;
-        allItems.forEach(item => { if(item.name && !item.stamp) { item.stamp = user; item.isNew = false; count++; } });
-        await syncToCloud();
+        items.forEach(item => { if(item.name && !item.stamp) { item.stamp = user; item.isNew = false; count++; } });
+        saveToLocal(); await syncToCloud(); renderTable();
         alert(count > 0 ? "簽章完成並同步存檔！" : "沒有需要簽章的新項目。");
     }
 
     async function manualSave() { 
-        allItems.forEach(item => { item.isNew = false; if(!item.id) item.id = "ID-" + Date.now(); });
-        await syncToCloud();
+        items.forEach(item => { item.isNew = false; if(!item.id) item.id = "ID-" + Date.now(); });
+        saveToLocal(); await syncToCloud(); renderTable();
         alert("所有修改已同步至雲端！"); 
     }
 
     function deleteRow(index) {
         if(confirm("確定刪除？")) {
-            allItems.splice(index, 1); 
-            syncToCloud();
+            items.splice(index, 1); saveToLocal(); syncToCloud(); renderTable();
         }
     }
 
+    function saveToLocal() { localStorage.setItem(dbKey, JSON.stringify(items)); }
     async function syncToCloud() {
-        try { 
-            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(allItems) }); 
-            loadFromCloud();
-        } catch (e) { alert("雲端同步失敗"); }
+        try { await fetch(GAS_URL, { method: "POST", body: JSON.stringify(items) }); } catch (e) { console.error("雲端同步失敗"); }
     }
-
     async function loadFromCloud() {
         try {
             const response = await fetch(`${GAS_URL}?t=${Date.now()}`);
             const cloudData = await response.json();
             if (Array.isArray(cloudData)) {
-                allItems = cloudData;
-            } else {
-                allItems = [];
+                // 💡 載入時清理日期格式
+                items = cloudData.map(item => {
+                    if (item.date && item.date.includes('T')) {
+                        const d = new Date(item.date);
+                        const dy = d.getFullYear();
+                        const dm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        item.date = `${dy}-${dm}-${dd}`;
+                    }
+                    return item;
+                });
+                saveToLocal();
             }
-        } catch (e) { 
-            allItems = []; 
-        }
+        } catch (e) { items = JSON.parse(localStorage.getItem(dbKey)) || []; }
         renderTable();
     }
 
@@ -255,7 +269,7 @@
     };
 
     function closeTable() {
-        if (allItems.some(i => i.isNew) && !confirm("您有尚未存檔的項目，確定要離開嗎？")) return;
+        if (items.some(i => i.isNew) && !confirm("您有尚未存檔的項目，確定要離開嗎？")) return;
         if (window.parent && typeof window.parent.goHome === 'function') window.parent.goHome();
         else window.location.href = "menu.html";
     }
