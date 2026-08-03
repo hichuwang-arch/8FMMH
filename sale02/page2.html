@@ -57,6 +57,7 @@
     </div>
     <div style="margin-left: 20px;">
         <span style="font-weight:bold;">📅 顯示月份：</span>
+        <!-- 🚀 關鍵修改 1：選單切換時直接重新向雲端抓該月份資料 -->
         <select id="filter_month" onchange="loadFromCloud()"></select>
     </div>
     <div style="margin-left: auto; display: flex; gap: 8px;">
@@ -157,7 +158,7 @@
                 }
             }
 
-            if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
+            // 🚀 關鍵修改 2：拿掉原本會把不同月份舊資料強制擋掉的判斷列！
 
             const tr = document.createElement('tr');
             if (item.isNew) tr.className = "row-new";
@@ -243,13 +244,12 @@
         } catch (e) { console.error("雲端同步失敗"); }
     }
 
-    // 🚀 關鍵優化：加上 ?month= 帶入下拉選單選擇的月份
+    // 🚀 關鍵修改 3：載入雲端資料時精準傳送月份，不再被快取擋住
     async function loadFromCloud() {
         const monthSelect = document.getElementById('filter_month');
         const selectedMonth = monthSelect ? monthSelect.value : "";
         
         try {
-            // 在 Request URL 後面精準加上選取的月份參數
             const response = await fetch(`${GAS_URL}?month=${selectedMonth}&t=${Date.now()}`);
             const cloudData = await response.json();
             if (Array.isArray(cloudData)) {
