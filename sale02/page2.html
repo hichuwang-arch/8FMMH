@@ -100,15 +100,38 @@
 
     let allItems = [];
 
+    // 🚀 最早底限為 2026年8月，最多保留最新 6 個月的動態選單
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
         select.innerHTML = "";
-        const months = ["2026-08", "2026-07", "2026-06", "2026-05", "2026-04", "2026-03"];
-        months.forEach(m => {
-            const [y, mm] = m.split('-');
-            select.add(new Option(`${y}年 ${parseInt(mm, 10)}月`, m));
-        });
-        select.value = "2026-08";
+
+        const startYear = 2026;
+        const startMonth = 8; // 最早起始月：2026年 8月
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+
+        // 從「當前月份」開始往前倒推，最多推算 6 個月
+        for (let i = 0; i < 6; i++) {
+            let d = new Date(currentYear, currentMonth - 1 - i, 1);
+            let y = d.getFullYear();
+            let m = d.getMonth() + 1;
+
+            // 若倒推月份早於 2026 年 8 月即停止
+            if (y < startYear || (y === startYear && m < startMonth)) {
+                break;
+            }
+
+            let monthStr = String(m).padStart(2, '0');
+            let monthValue = `${y}-${monthStr}`;
+            
+            select.add(new Option(`${y}年 ${m}月`, monthValue));
+        }
+
+        // 預設選取當前最新月份
+        const currentMonthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+        select.value = currentMonthStr;
     }
 
     function initUserList() {
@@ -142,7 +165,6 @@
         document.getElementById('page_title').innerText = `${y}年${parseInt(m, 10)}月 缺 物 登 記 表`;
 
         allItems.forEach((item, index) => {
-            // 💡 整理日期格式 (防呆處理，確保 ISO 格式或斜線格式都能解析)
             let safeDate = "";
             if (item.date) {
                 let str = String(item.date).replace(/\//g, '-').trim();
@@ -150,7 +172,6 @@
                 safeDate = str.substring(0, 10);
             }
 
-            // 若月份不符且非新新增項目，則不顯示
             if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
@@ -163,7 +184,6 @@
             else if(item.status === "已回") sClass = "status-received";
             else if(item.status === "缺貨中") sClass = "status-oos";
 
-            // 💡 使用唯一的 item.id 或全域 index 進行精準修改
             tr.innerHTML = `
                 <td class="${lockedClass}"><input type="date" value="${safeDate}" onchange="updateItem(${index}, 'date', this.value)"></td>
                 <td class="${lockedClass}"><input type="text" value="${item.name || ''}" onchange="updateItem(${index}, 'name', this.value)"></td>
@@ -256,7 +276,6 @@
 
     async function syncToCloud() {
         try { 
-            // 💡 使用 no-cors mode 避免跨網域被封鎖，且存檔後不再重複觸發 loadFromCloud
             await fetch(GAS_URL, { 
                 method: "POST", 
                 mode: "no-cors",
@@ -269,38 +288,36 @@
     }
 
     async function loadFromCloud() {
-    try {
-        const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { redirect: "follow" });
-        const cloudData = await response.json();
-        
-        if (Array.isArray(cloudData) && cloudData.length > 0) {
-            allItems = cloudData.map(item => {
-                let safeDate = "";
-                if (item.date) {
-                    // 💡 關鍵修正：直接丟給 JS Date 物件解析，完美處理 "Tue Aug 04 2026..." 格式
-                    const d = new Date(item.date);
-                    if (!isNaN(d.getTime())) {
-                        const yyyy = d.getFullYear();
-                        const mm = String(d.getMonth() + 1).padStart(2, '0');
-                        const dd = String(d.getDate()).padStart(2, '0');
-                        safeDate = `${yyyy}-${mm}-${dd}`;
-                    } else {
-                        // 防呆：如果是標準字串處理
-                        safeDate = String(item.date).replace(/\//g, '-').trim().substring(0, 10);
+        try {
+            const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { redirect: "follow" });
+            const cloudData = await response.json();
+            
+            if (Array.isArray(cloudData) && cloudData.length > 0) {
+                allItems = cloudData.map(item => {
+                    let safeDate = "";
+                    if (item.date) {
+                        const d = new Date(item.date);
+                        if (!isNaN(d.getTime())) {
+                            const yyyy = d.getFullYear();
+                            const mm = String(d.getMonth() + 1).padStart(2, '0');
+                            const dd = String(d.getDate()).padStart(2, '0');
+                            safeDate = `${yyyy}-${mm}-${dd}`;
+                        } else {
+                            safeDate = String(item.date).replace(/\//g, '-').trim().substring(0, 10);
+                        }
                     }
-                }
-                item.date = safeDate;
-                return item;
-            });
-        } else {
-            allItems = [];
+                    item.date = safeDate;
+                    return item;
+                });
+            } else {
+                allItems = [];
+            }
+        } catch (e) { 
+            console.error("雲端載入失敗：", e);
+            allItems = []; 
         }
-    } catch (e) { 
-        console.error("雲端載入失敗：", e);
-        allItems = []; 
+        renderTable();
     }
-    renderTable(); // 重新繪製表格
-}
 
     window.onload = () => { 
         initMonthFilter();
