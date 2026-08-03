@@ -269,19 +269,38 @@
     }
 
     async function loadFromCloud() {
-        try {
-            // 💡 加上 redirect: "follow" 確保 Google Apps Script 轉址能正確接收到 JSON
-            const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { redirect: "follow" });
-            const cloudData = await response.json();
-            
-            if (Array.isArray(cloudData) && cloudData.length > 0) {
-                allItems = cloudData;
-            }
-        } catch (e) { 
-            console.error("雲端載入失敗：", e);
+    try {
+        const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { redirect: "follow" });
+        const cloudData = await response.json();
+        
+        if (Array.isArray(cloudData) && cloudData.length > 0) {
+            allItems = cloudData.map(item => {
+                let safeDate = "";
+                if (item.date) {
+                    // 💡 關鍵修正：直接丟給 JS Date 物件解析，完美處理 "Tue Aug 04 2026..." 格式
+                    const d = new Date(item.date);
+                    if (!isNaN(d.getTime())) {
+                        const yyyy = d.getFullYear();
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        safeDate = `${yyyy}-${mm}-${dd}`;
+                    } else {
+                        // 防呆：如果是標準字串處理
+                        safeDate = String(item.date).replace(/\//g, '-').trim().substring(0, 10);
+                    }
+                }
+                item.date = safeDate;
+                return item;
+            });
+        } else {
+            allItems = [];
         }
-        renderTable();
+    } catch (e) { 
+        console.error("雲端載入失敗：", e);
+        allItems = []; 
     }
+    renderTable(); // 重新繪製表格
+}
 
     window.onload = () => { 
         initMonthFilter();
