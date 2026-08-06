@@ -99,37 +99,31 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyve4I9dSxGnig8z9pOzXwMaYewGuTuLFn71tEo3dmMYazW4hT57QEk5apakJg4WEF1AA/exec"; 
 
     let allItems = [];
+    let isCloudLoadedReady = false; // 🛡️ 安全旗標：確認雲端資料已順利載入
 
-    // 🚀 最早底限為 2026年8月，最多保留最新 6 個月的動態選單
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
         select.innerHTML = "";
 
         const startYear = 2026;
-        const startMonth = 8; // 最早起始月：2026年 8月
+        const startMonth = 8;
 
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
 
-        // 從「當前月份」開始往前倒推，最多推算 6 個月
         for (let i = 0; i < 6; i++) {
             let d = new Date(currentYear, currentMonth - 1 - i, 1);
             let y = d.getFullYear();
             let m = d.getMonth() + 1;
 
-            // 若倒推月份早於 2026 年 8 月即停止
-            if (y < startYear || (y === startYear && m < startMonth)) {
-                break;
-            }
+            if (y < startYear || (y === startYear && m < startMonth)) break;
 
             let monthStr = String(m).padStart(2, '0');
             let monthValue = `${y}-${monthStr}`;
-            
             select.add(new Option(`${y}年 ${m}月`, monthValue));
         }
 
-        // 預設選取當前最新月份
         const currentMonthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
         select.value = currentMonthStr;
     }
@@ -172,6 +166,7 @@
                 safeDate = str.substring(0, 10);
             }
 
+            // 僅篩選顯示，但不影響記憶體中的全量資料
             if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
@@ -204,6 +199,9 @@
     }
 
     function addRow() { 
+        if (!isCloudLoadedReady) {
+            return alert("⚠️ 雲端資料尚未載入完成，請稍候再試或重新整理頁面！");
+        }
         const filterMonth = document.getElementById('filter_month').value || "2026-08";
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
@@ -251,9 +249,11 @@
                 count++; 
             } 
         });
-        await syncToCloud();
-        renderTable();
-        alert(count > 0 ? "簽章完成並同步存檔！" : "沒有需要簽章的新項目。");
+        const success = await syncToCloud();
+        if (success) {
+            renderTable();
+            alert(count > 0 ? "簽章完成並同步存檔！" : "沒有需要簽章的新項目。");
+        }
     }
 
     async function manualSave() { 
@@ -261,20 +261,33 @@
             item.isNew = false; 
             if(!item.id) item.id = "ID-" + Date.now() + "-" + Math.floor(Math.random() * 1000); 
         });
-        await syncToCloud();
-        renderTable();
-        alert("所有修改已同步至雲端！"); 
-    }
-
-    function deleteRow(index) {
-        if(confirm("確定刪除？")) {
-            allItems.splice(index, 1); 
-            syncToCloud();
+        const success = await syncToCloud();
+        if (success) {
             renderTable();
+            alert("所有修改已同步至雲端！"); 
         }
     }
 
+    async function deleteRow(index) {
+        if(confirm("確定刪除？")) {
+            allItems.splice(index, 1); 
+            const success = await syncToCloud();
+            if (success) renderTable();
+        }
+    }
+
+    // 🛡️ 安全同步函數
     async function syncToCloud() {
+        if (!isCloudLoadedReady) {
+            alert("❌ 雲端資料尚未順利載入，為避免覆蓋刪除歷史資料，已禁止存檔！請重新整理頁面。");
+            return false;
+        }
+
+        if (allItems.length === 0) {
+            alert("❌ 當前沒有任何資料可供同步，拒絕儲存！");
+            return false;
+        }
+
         try { 
             await fetch(GAS_URL, { 
                 method: "POST", 
@@ -282,8 +295,10 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(allItems) 
             }); 
+            return true;
         } catch (e) { 
-            alert("雲端同步失敗，請檢查網路"); 
+            alert("❌ 雲端同步失敗，請檢查網路連線！"); 
+            return false;
         }
     }
 
@@ -292,7 +307,7 @@
             const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { redirect: "follow" });
             const cloudData = await response.json();
             
-            if (Array.isArray(cloudData) && cloudData.length > 0) {
+            if (Array.isArray(cloudData)) {
                 allItems = cloudData.map(item => {
                     let safeDate = "";
                     if (item.date) {
@@ -309,12 +324,13 @@
                     item.date = safeDate;
                     return item;
                 });
+                isCloudLoadedReady = true; // 🛡️ 成功載入，解除存檔鎖定
             } else {
-                allItems = [];
+                alert("⚠️ 雲端資料格式異常，存檔功能已自動鎖定！");
             }
         } catch (e) { 
             console.error("雲端載入失敗：", e);
-            allItems = []; 
+            alert("⚠️ 載入雲端資料失敗，請檢查網路。已自動鎖定儲存功能以保護資料。");
         }
         renderTable();
     }
@@ -324,12 +340,6 @@
         initUserList(); 
         loadFromCloud(); 
     };
-
-    function closeTable() {
-        if (allItems.some(i => i.isNew) && !confirm("您有尚未存檔的項目，確定要離開嗎？")) return;
-        if (window.parent && typeof window.parent.goHome === 'function') window.parent.goHome();
-        else window.location.href = "menu.html";
-    }
 </script>
 </body>
 </html>
