@@ -57,7 +57,7 @@
     </div>
     <div style="margin-left: 20px;">
         <span style="font-weight:bold;">📅 顯示月份：</span>
-        <select id="filter_month" onchange="renderTable()"></select>
+        <select id="filter_month" onchange="handleMonthChange()"></select>
     </div>
     <div style="margin-left: auto; display: flex; gap: 8px;">
         <button class="btn btn-add" onclick="addRow()">➕ 新增項目</button>
@@ -101,23 +101,19 @@
     let allItems = [];
     let isCloudLoadedReady = false; // 🛡️ 安全旗標：確認雲端資料已順利載入
 
+    // 📅 初始化月份選單：僅保留含當月（8月）在內的前 6 個月
     function initMonthFilter() {
         const select = document.getElementById('filter_month');
         select.innerHTML = "";
 
-        const startYear = 2026;
-        const startMonth = 8;
-
         const now = new Date();
         const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth() + 1;
+        const currentMonth = now.getMonth() + 1; // 1-12
 
         for (let i = 0; i < 6; i++) {
             let d = new Date(currentYear, currentMonth - 1 - i, 1);
             let y = d.getFullYear();
             let m = d.getMonth() + 1;
-
-            if (y < startYear || (y === startYear && m < startMonth)) break;
 
             let monthStr = String(m).padStart(2, '0');
             let monthValue = `${y}-${monthStr}`;
@@ -147,6 +143,11 @@
         renderTable();
     }
 
+    // 當切換選單月份時，自動向雲端重新載入該月份資料
+    function handleMonthChange() {
+        loadFromCloud();
+    }
+
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
@@ -165,9 +166,6 @@
                 if (str.includes('T')) str = str.split('T')[0];
                 safeDate = str.substring(0, 10);
             }
-
-            // 僅篩選顯示，但不影響記憶體中的全量資料
-            if (!safeDate.startsWith(filterMonth) && !item.isNew) return;
 
             const tr = document.createElement('tr');
             if (item.isNew) tr.className = "row-new";
@@ -283,8 +281,10 @@
             return false;
         }
 
-        if (allItems.length === 0) {
-            alert("❌ 當前沒有任何資料可供同步，拒絕儲存！");
+        const validItems = allItems.filter(item => item.name || item.stamp || item.note);
+
+        if (validItems.length === 0) {
+            alert("⚠️ 當前頁面沒有填寫任何有效資料！");
             return false;
         }
 
@@ -293,7 +293,7 @@
                 method: "POST", 
                 mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(allItems) 
+                body: JSON.stringify(validItems) 
             }); 
             return true;
         } catch (e) { 
@@ -302,9 +302,13 @@
         }
     }
 
+    // 載入指定月份資料
     async function loadFromCloud() {
+        isCloudLoadedReady = false;
+        const filterMonth = document.getElementById('filter_month').value || "";
+        
         try {
-            const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { redirect: "follow" });
+            const response = await fetch(`${GAS_URL}?month=${filterMonth}&t=${Date.now()}`, { redirect: "follow" });
             const cloudData = await response.json();
             
             if (Array.isArray(cloudData)) {
